@@ -1,0 +1,8 @@
+{
+    "components": [
+        "ocult:worker"
+    ],
+    "hitbox": [0.6, 0.8, 0.6],
+    "blocking": false,
+    "skeleton-name": "ocult:worker"
+}

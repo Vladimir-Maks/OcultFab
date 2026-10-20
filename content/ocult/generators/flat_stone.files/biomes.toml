@@ -1,0 +1,9 @@
+# everything is void; the arena floor is placed by script.lua
+[void]
+parameters = []
+layers = [
+    {height=-1, block="core:air"}
+]
+sea-layers = [
+    {height=-1, block="core:air"}
+]

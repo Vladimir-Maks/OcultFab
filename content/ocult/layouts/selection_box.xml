@@ -1,0 +1,7 @@
+<!-- Drag-selection rectangle, moved/resized by ocult:rts/selection -->
+<container pos="-10,-10" size="0,0" interactive="false" z-index="-3" color="#60ff8030">
+    <container id="top" pos="0,0" size="0,1" color="#60ff80C0"/>
+    <container id="bottom" pos="0,0" size="0,1" color="#60ff80C0"/>
+    <container id="left" pos="0,0" size="1,0" color="#60ff80C0"/>
+    <container id="right" pos="0,0" size="1,0" color="#60ff80C0"/>
+</container>

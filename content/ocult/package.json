@@ -1,0 +1,9 @@
+{
+    "id": "ocult",
+    "title": "Ocult Fab",
+    "version": "0.1",
+    "description": "Occult factory game for the VoxelCore game jam",
+    "dependencies": [
+        "base"
+    ]
+}
