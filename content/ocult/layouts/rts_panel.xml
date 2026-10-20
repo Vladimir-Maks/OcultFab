@@ -1,10 +1,8 @@
 <!-- Bottom command panel, StarCraft/Warcraft style. Filled by ocult:rts/command_panel -->
 <container size="760,150" z-index="-2" color="#140c12E8"
            position-func="gui.get_viewport()[1] / 2 - 380, gui.get_viewport()[2] - 150">
-    <container id="portrait" pos="10,10" size="130,130" color="#2a1824FF">
-        <label id="portrait_text" pos="0,55" size="130,20" text-align="center"
-               color="#c8a0b0FF"></label>
-    </container>
+    <!-- 3D preview of the selected object (modelviewer), see command_panel -->
+    <container id="portrait" pos="10,10" size="130,130" color="#2a1824FF"/>
     <container id="info" pos="150,10" size="360,130" color="#00000000">
         <label id="sel_title" pos="0,0" size="360,24" color="#e0c8d0FF"></label>
         <label id="sel_desc" pos="0,30" size="360,100" multiline="true" text-wrap="true"

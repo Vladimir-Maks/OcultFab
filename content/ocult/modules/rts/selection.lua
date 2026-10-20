@@ -4,11 +4,13 @@
 --   LMB drag               - select all units inside the box (shift - add)
 --   RMB                    - order selected objects (move / rally point)
 -- Commands with `place` switch to placement mode first (see rts/placement).
+-- With nothing selected the panel shows default commands (rts/commander).
 local unit = require "ocult:rts/unit"
 local building = require "ocult:rts/building"
 local placement = require "ocult:rts/placement"
 local cursor_ray = require "ocult:cursor_ray"
 local command_panel = require "ocult:rts/command_panel"
+local commander = require "ocult:rts/commander"
 
 local this = {}
 
@@ -24,9 +26,17 @@ local cam, pid
 
 local refresh
 
+-- who runs panel commands: the selection, or the defaults if it's empty
+local function command_holders()
+    if #selected == 0 then
+        return {commander}
+    end
+    return selected
+end
+
 local function run_command(id)
     local holders = {}
-    for _, obj in ipairs(selected) do
+    for _, obj in ipairs(command_holders()) do
         if obj.find_command(id) then
             table.insert(holders, obj)
         end
@@ -41,6 +51,8 @@ local function run_command(id)
             if holders[1].is_alive() then
                 holders[1].run_command(id, origin)
             end
+        end, cmd.continuous and function(pos)
+            holders[1].run_command(id .. "_remove", pos)
         end)
         return
     end
@@ -51,7 +63,7 @@ local function run_command(id)
 end
 
 refresh = function()
-    command_panel.show(selected, run_command)
+    command_panel.show(selected, run_command, commander.commands)
 end
 
 function this.set(list)
@@ -202,6 +214,14 @@ function this.init(camera, playerid)
     command_panel.open()
     hud.open_permanent(BOX_LAYOUT)
     box_doc = Document.new(BOX_LAYOUT)
+    -- Esc leaves placement mode instead of opening the pause menu
+    -- (handlers run newest first, true stops the chain)
+    input.add_callback("key:escape", function()
+        if placement.is_active() then
+            placement.cancel()
+            return true
+        end
+    end)
     hide_box()
 end
 
@@ -253,7 +273,7 @@ function this.update()
         return
     end
     if placement.is_active() then
-        placement.update(cam, left_click, right_click)
+        placement.update(cam, left_click, right_click, left, right)
         return
     end
     if left_click then

@@ -9,6 +9,8 @@
 -- def fields:
 --   title       - display name
 --   description - text for the info panel
+--   preview     - {model = "name", center = {x, y, z}} 3D portrait in the panel;
+--                 center is the point the portrait camera looks at (model space)
 --   commands    - list of {id=, label=, hint=, place=}; a click calls
 --                 command_<id>(...). With `place = "pack:block"` the player first
 --                 picks a spot for that building; the handler gets its origin.
@@ -25,6 +27,7 @@ function object.extend(target, def, highlight)
 
     function target.get_title() return def.title or "?" end
     function target.get_description() return def.description or "" end
+    function target.get_preview() return def.preview end
     function target.get_commands() return def.commands or {} end
 
     function target.find_command(id)

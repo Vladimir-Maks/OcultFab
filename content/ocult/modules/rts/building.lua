@@ -5,6 +5,7 @@
 --       title = "...",
 --       description = "...",
 --       commands = {{id = "foo", label = "..."}},
+--       pipes = true, -- adjacent pipes connect to it (bottom layer)
 --       command_foo = function(self) ... end, -- self = building handle
 --   }
 
@@ -76,6 +77,9 @@ end
 
 function building.place(block_name, origin)
     block.place(origin[1], origin[2], origin[3], block.index(block_name), 0)
+    -- lazy: ocult:pipes requires this module
+    local sx, _, sz = size_of(block_name)
+    require("ocult:pipes").refresh_ring(origin[1], origin[2], origin[3], sx, sz)
 end
 
 -- handle for the building occupying (x, y, z) (any segment), or nil

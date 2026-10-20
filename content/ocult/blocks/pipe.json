@@ -1,0 +1,18 @@
+{
+    "model": "custom",
+    "model-name": "ocult_pipe_i",
+    "rotation": "pane",
+    "state-based": {
+        "bits": 2,
+        "variants": [
+            {"model": "custom", "model-name": "ocult_pipe_v"},
+            {"model": "custom", "model-name": "ocult_pipe_t"},
+            {"model": "custom", "model-name": "ocult_pipe_k"}
+        ]
+    },
+    "hitbox": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
+    "obstacle": false,
+    "light-passing": true,
+    "sky-light-passing": true,
+    "breakable": false
+}

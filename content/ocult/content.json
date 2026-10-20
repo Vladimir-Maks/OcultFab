@@ -1,9 +1,10 @@
 {
-  "blocks": [
-    "altar"
-  ],
-  "items": [],
   "entities": [
     "worker"
+  ],
+  "items": [],
+  "blocks": [
+    "altar",
+    "pipe"
   ]
 }

@@ -7,6 +7,7 @@ unit.extend(this, {
     title = "Культист",
     description = "Рабочий. Может принести себя в жертву и стать алтарём.",
     color = {0.55, 0.15, 0.2},
+    preview = {model = "ocult_worker", center = {0, 0, 0}},
     commands = {
         {id = "stop", label = "Стоп", hint = "Остановиться"},
         {id = "altar", label = "Алтарь", hint = "Стать алтарём (выбрать место)",

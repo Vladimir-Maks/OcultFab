@@ -1,12 +1,15 @@
 -- Building placement mode: footprint preview under the cursor, snapped to the
 -- block grid. LMB - confirm (if the spot is valid), RMB - cancel.
+-- Continuous mode (pipes, walls...): stays on after placing, holding LMB
+-- places on every new valid cell under the cursor, holding RMB removes blocks
+-- of this type under the cursor; Esc finishes (see rts/selection).
 local building = require "ocult:rts/building"
 local cursor_ray = require "ocult:cursor_ray"
 local markers = require "ocult:rts/markers"
 
 local this = {}
 
-local active -- {block_name, on_confirm, origin, valid, marks}
+local active -- {block_name, on_confirm, on_remove, origin, valid, marks, last}
 
 local function clear_marks()
     if active then
@@ -15,9 +18,10 @@ local function clear_marks()
     end
 end
 
-function this.start(block_name, on_confirm)
+-- on_remove(pos): given -> continuous mode
+function this.start(block_name, on_confirm, on_remove)
     this.cancel()
-    active = {block_name = block_name, on_confirm = on_confirm}
+    active = {block_name = block_name, on_confirm = on_confirm, on_remove = on_remove}
 end
 
 function this.cancel()
@@ -52,18 +56,49 @@ local function update_preview(cam)
     active.valid = valid
 end
 
--- left/right: true on the frame the mouse button went down
-function this.update(cam, left, right)
+local function same(a, b)
+    return a and b and a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
+end
+
+local function remove_under_cursor(cam)
+    local hit = cursor_ray.pick(cam)
+    if hit and hit.block == block.index(active.block_name) then
+        active.on_remove(hit.iendpoint)
+        clear_marks()
+        active.origin = nil
+    end
+end
+
+-- left/right: true on the frame the mouse button went down;
+-- left_held/right_held: the button is down (used by continuous mode)
+function this.update(cam, left, right, left_held, right_held)
     if not active then
         return
     end
-    if right then
+    local continuous = active.on_remove ~= nil
+    if continuous and right_held then
+        remove_under_cursor(cam)
+    elseif right then
         this.cancel()
         return
     end
     update_preview(cam)
-    if left and active.origin and active.valid then
-        local callback, origin = active.on_confirm, active.origin
+    local origin = active.origin
+    if not origin or not active.valid then
+        return
+    end
+    if continuous then
+        if left_held and not same(origin, active.last) then
+            active.last = origin
+            active.on_confirm(origin)
+            -- the spot is taken now: rebuild the preview
+            clear_marks()
+            active.origin = nil
+        elseif not left_held then
+            active.last = nil
+        end
+    elseif left then
+        local callback = active.on_confirm
         this.cancel()
         callback(origin)
     end
