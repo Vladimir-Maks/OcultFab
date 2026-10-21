@@ -252,6 +252,11 @@ function this.update()
         selected = alive
         refresh()
     end
+    -- before any early return: the mode can end while the cursor is over
+    -- the panel (the "Отмена" button)
+    if placement.get_command() ~= shown_mode then
+        refresh() -- entered/left placement mode (Esc, RMB, new selection...)
+    end
 
     local left = input.is_pressed("mouse:left")
     local right = input.is_pressed("mouse:right")
@@ -284,9 +289,6 @@ function this.update()
 
     if hud.is_inventory_open() or command_panel.is_hovered() then
         return
-    end
-    if placement.get_command() ~= shown_mode then
-        refresh() -- entered/left placement mode (Esc, RMB, new selection...)
     end
     if placement.is_active() then
         placement.update(cam, left_click, right_click, left, right)
