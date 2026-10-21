@@ -11,7 +11,8 @@
 --   description - text for the info panel
 --   preview     - {model = "name", center = {x, y, z}} 3D portrait in the panel;
 --                 center is the point the portrait camera looks at (model space)
---   commands    - list of {id=, label=, hint=, place=}; a click calls
+--   commands    - list of {id=, label=, hint=, slot=, place=}; slot is the cell
+--                 of the 4x3 command grid (see rts/command_panel); a click calls
 --                 command_<id>(...). With `place = "pack:block"` the player first
 --                 picks a spot for that building; the handler gets its origin.
 

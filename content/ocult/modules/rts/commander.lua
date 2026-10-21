@@ -6,8 +6,8 @@ local this = {}
 
 this.commands = {
     -- continuous: LMB places, RMB removes (command_pipe_remove), Esc exits
-    {id = "pipe", label = "Труба",
-     hint = "Трубы: ЛКМ - ставить, ПКМ - ломать, Esc - готово",
+    {id = "pipe", label = "Труба", slot = 9,
+     hint = "Трубы: ЛКМ - установить, ПКМ - демонтировть, Esc - отменить",
      place = pipes.BLOCK, continuous = true},
 }
 

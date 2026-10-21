@@ -19,6 +19,7 @@ local DRAG_THRESHOLD = 6 -- px before a click turns into a box
 
 local selected = {} -- list of handles (unit components / building handles)
 local prev_left, prev_right = false, false
+local shown_mode -- placement command the panel currently shows
 local drag_start -- screen pos where LMB went down (outside of UI)
 local dragging = false
 local box_doc
@@ -53,7 +54,8 @@ local function run_command(id)
             end
         end, cmd.continuous and function(pos)
             holders[1].run_command(id .. "_remove", pos)
-        end)
+        end, cmd)
+        refresh()
         return
     end
     for _, obj in ipairs(holders) do
@@ -63,7 +65,17 @@ local function run_command(id)
 end
 
 refresh = function()
-    command_panel.show(selected, run_command, commander.commands)
+    local mode
+    shown_mode = placement.get_command()
+    if shown_mode then
+        local def = building.get_def(block.index(placement.get_block()))
+        mode = {
+            command = shown_mode,
+            preview = def and def.preview,
+            on_cancel = function() placement.cancel() end,
+        }
+    end
+    command_panel.show(selected, run_command, commander.commands, mode)
 end
 
 function this.set(list)
@@ -223,6 +235,7 @@ function this.init(camera, playerid)
         end
     end)
     hide_box()
+    refresh() -- empty selection: show the default commands right away
 end
 
 function this.update()
@@ -271,6 +284,9 @@ function this.update()
 
     if hud.is_inventory_open() or command_panel.is_hovered() then
         return
+    end
+    if placement.get_command() ~= shown_mode then
+        refresh() -- entered/left placement mode (Esc, RMB, new selection...)
     end
     if placement.is_active() then
         placement.update(cam, left_click, right_click, left, right)

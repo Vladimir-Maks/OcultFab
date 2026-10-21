@@ -9,9 +9,9 @@ unit.extend(this, {
     color = {0.55, 0.15, 0.2},
     preview = {model = "ocult_worker", center = {0, 0, 0}},
     commands = {
-        {id = "stop", label = "Стоп", hint = "Остановиться"},
+        {id = "stop", label = "Стоп", hint = "Остановиться", slot = 2},
         {id = "altar", label = "Алтарь", hint = "Стать алтарём (выбрать место)",
-         place = "ocult:altar"},
+         slot = 9, place = "ocult:altar"},
     },
 })
 

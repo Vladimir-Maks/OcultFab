@@ -9,7 +9,7 @@ local markers = require "ocult:rts/markers"
 
 local this = {}
 
-local active -- {block_name, on_confirm, on_remove, origin, valid, marks, last}
+local active -- {block_name, on_confirm, on_remove, command, origin, valid, marks, last}
 
 local function clear_marks()
     if active then
@@ -19,9 +19,11 @@ local function clear_marks()
 end
 
 -- on_remove(pos): given -> continuous mode
-function this.start(block_name, on_confirm, on_remove)
+-- command: the panel command that started the mode (for the UI)
+function this.start(block_name, on_confirm, on_remove, command)
     this.cancel()
-    active = {block_name = block_name, on_confirm = on_confirm, on_remove = on_remove}
+    active = {block_name = block_name, on_confirm = on_confirm, on_remove = on_remove,
+              command = command}
 end
 
 function this.cancel()
@@ -31,6 +33,15 @@ end
 
 function this.is_active()
     return active ~= nil
+end
+
+-- command that started the current mode, or nil
+function this.get_command()
+    return active and active.command
+end
+
+function this.get_block()
+    return active and active.block_name
 end
 
 local function update_preview(cam)
