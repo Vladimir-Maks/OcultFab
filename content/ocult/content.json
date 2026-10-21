@@ -1,11 +1,12 @@
 {
+  "entities": [
+    "worker"
+  ],
+  "items": [],
   "blocks": [
     "altar",
     "pipe",
-    "extractor"
-  ],
-  "items": [],
-  "entities": [
-    "worker"
+    "extractor",
+    "core"
   ]
 }

@@ -10,7 +10,7 @@
             {"model": "custom", "model-name": "ocult_pipe_k"}
         ]
     },
-    "hitbox": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
+    "hitbox": [0.0, 0.0, 0.0, 1.0, 0.3, 1.0],
     "obstacle": false,
     "light-passing": true,
     "sky-light-passing": true,

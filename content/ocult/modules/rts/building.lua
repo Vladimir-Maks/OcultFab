@@ -82,6 +82,14 @@ function building.place(block_name, origin)
     require("ocult:pipes").refresh_ring(origin[1], origin[2], origin[3], sx, sz)
 end
 
+-- removes the building (handle from building.instance); air in the origin
+-- cell makes the engine erase all segments of an extended block
+function building.demolish(self)
+    local sx, _, sz = block.get_size(self.id)
+    block.set(self.x, self.y, self.z, 0, 0)
+    require("ocult:pipes").refresh_ring(self.x, self.y, self.z, sx, sz)
+end
+
 -- handle for the building occupying (x, y, z) (any segment), or nil
 function building.instance(x, y, z)
     local ox, oy, oz = block.seek_origin(x, y, z)
