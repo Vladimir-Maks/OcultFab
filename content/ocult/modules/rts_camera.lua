@@ -37,14 +37,6 @@ local function key(name)
     return input.is_pressed("key:" .. name)
 end
 
-local function ground_height(x, z, fallback)
-    local hit = block.raycast({x, 255, z}, {0, -1, 0}, 256)
-    if hit then
-        return hit.endpoint[2]
-    end
-    return fallback
-end
-
 -- ground-plane forward/right vectors for the current yaw
 local function axes(yaw)
     local r = math.rad(yaw)
@@ -165,7 +157,6 @@ function this.update(dt)
     cur.z = lerp(cur.z, target.z, t)
     cur.dist = lerp(cur.dist, target.dist, t)
     cur.yaw = lerp(cur.yaw, target.yaw, t)
-    cur.y = lerp(cur.y, ground_height(cur.x, cur.z, cur.y), t * 0.5)
     apply()
 end
 

@@ -2,7 +2,7 @@
     "model": "custom",
     "model-name": "ocult_core",
     "size": [3, 2, 3],
-    "hitbox": [0.0, 0.0, 0.0, 3.0, 1.5, 3.0],
+    "hitbox": [0.0, 0.0, 0.0, 3.0, 0.5, 3.0],
     "emission": [6, 0, 11],
     "light-passing": true,
     "sky-light-passing": true,

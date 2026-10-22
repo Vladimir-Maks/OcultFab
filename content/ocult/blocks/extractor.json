@@ -2,7 +2,7 @@
     "model": "custom",
     "model-name": "ocult_extractor",
     "size": [2, 2, 2],
-    "hitbox": [0.0, 0.0, 0.0, 2.0, 2.5, 2.0],
+    "hitbox": [0.0, 0.0, 0.0, 2.0, 0.5, 2.0],
     "translucent": true,
     "light-passing": true,
     "sky-light-passing": true,
