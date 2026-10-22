@@ -46,10 +46,11 @@ function this.world_to_screen(cam, point)
     return {(nx + 1) / 2 * w, (1 - ny) / 2 * h}
 end
 
--- block.raycast result ({block, endpoint, iendpoint, length, normal}) or nil
-function this.pick(cam, screen_pos, max_distance)
+-- block.raycast result ({block, endpoint, iendpoint, length, normal}) or nil;
+-- ignore: optional list of block names the ray passes through
+function this.pick(cam, screen_pos, max_distance, ignore)
     local origin, dir = this.get_ray(cam, screen_pos)
-    return block.raycast(origin, dir, max_distance or MAX_DISTANCE)
+    return block.raycast(origin, dir, max_distance or MAX_DISTANCE, nil, ignore or {})
 end
 
 return this

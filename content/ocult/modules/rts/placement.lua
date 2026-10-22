@@ -11,6 +11,18 @@ local this = {}
 
 local active -- {block_name, on_confirm, on_remove, command, origin, valid, marks, last}
 
+-- the cursor ray goes through other buildings: their hitboxes would hide the
+-- floor right behind them (where the ports often are)
+local function pick(cam)
+    local ignore = {}
+    for _, name in ipairs(building.block_names()) do
+        if name ~= active.block_name then
+            table.insert(ignore, name)
+        end
+    end
+    return cursor_ray.pick(cam, nil, nil, ignore)
+end
+
 local function clear_marks()
     if active then
         markers.clear(active.marks)
@@ -45,7 +57,7 @@ function this.get_block()
 end
 
 local function update_preview(cam)
-    local hit = cursor_ray.pick(cam)
+    local hit = pick(cam)
     -- only the top faces of blocks are valid spots
     if not hit or hit.normal[2] ~= 1 then
         clear_marks()
@@ -72,7 +84,7 @@ local function same(a, b)
 end
 
 local function remove_under_cursor(cam)
-    local hit = cursor_ray.pick(cam)
+    local hit = pick(cam)
     if hit and hit.block == block.index(active.block_name) then
         active.on_remove(hit.iendpoint)
         clear_marks()

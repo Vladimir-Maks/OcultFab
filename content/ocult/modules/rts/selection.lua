@@ -11,6 +11,7 @@ local placement = require "ocult:rts/placement"
 local cursor_ray = require "ocult:cursor_ray"
 local command_panel = require "ocult:rts/command_panel"
 local commander = require "ocult:rts/commander"
+local port_overlay = require "ocult:rts/port_overlay"
 
 local this = {}
 
@@ -76,6 +77,7 @@ refresh = function()
         }
     end
     command_panel.show(selected, run_command, commander.commands, mode)
+    port_overlay.set_visible(shown_mode ~= nil and shown_mode.show_ports == true, cam)
 end
 
 function this.set(list)

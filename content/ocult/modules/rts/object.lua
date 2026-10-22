@@ -15,6 +15,7 @@
 --                 of the 4x3 command grid (see rts/command_panel); a click calls
 --                 command_<id>(...). With `place = "pack:block"` the player first
 --                 picks a spot for that building; the handler gets its origin.
+--                 `show_ports = true` shows building pipe ports in that mode.
 
 local object = {}
 

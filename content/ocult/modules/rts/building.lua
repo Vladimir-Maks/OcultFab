@@ -6,6 +6,13 @@
 --       description = "...",
 --       commands = {{id = "foo", label = "..."}},
 --       pipes = true, -- adjacent pipes connect to it (bottom layer)
+--       -- optional: only these spots accept pipes; without it any side works
+--       -- as both input and output. cell = {x, z} footprint cell counted from
+--       -- the building origin (north-west corner), side = north (-Z) /
+--       -- south (+Z) / east (+X) / west (-X), mode = "in" / "out"
+--       ports = {
+--           {cell = {0, 0}, side = "west", mode = "in"},
+--       },
 --       command_foo = function(self) ... end, -- self = building handle
 --   }
 
@@ -13,6 +20,14 @@ local object = require "ocult:rts/object"
 local markers = require "ocult:rts/markers"
 
 local building = {}
+
+building.SIDES = {
+    north = {0, -1},
+    south = {0, 1},
+    east = {1, 0},
+    west = {-1, 0},
+}
+building.ANY = "any" -- port mode when the building has no `ports`
 
 local defs = {}
 
@@ -32,6 +47,21 @@ end
 
 local function size_of(block_name)
     return block.get_size(block.index(block_name))
+end
+
+local block_names
+
+-- names of all blocks that are buildings (have a modules/buildings def)
+function building.block_names()
+    if not block_names then
+        block_names = {}
+        for id = 0, block.defs_count() - 1 do
+            if building.get_def(id) then
+                table.insert(block_names, block.name(id))
+            end
+        end
+    end
+    return block_names
 end
 
 -- origin of a building of this type centered on the ground point; y is the
@@ -88,6 +118,79 @@ function building.demolish(self)
     local sx, _, sz = block.get_size(self.id)
     block.set(self.x, self.y, self.z, 0, 0)
     require("ocult:pipes").refresh_ring(self.x, self.y, self.z, sx, sz)
+end
+
+-- mode of the port at building cell (x, y, z) facing direction (dx, dz),
+-- i.e. a pipe standing at (x + dx, y, z + dz); nil if pipes can't attach there
+function building.port_mode(x, y, z, dx, dz)
+    local id = block.get(x, y, z)
+    if id <= 0 then
+        return nil
+    end
+    local def = building.get_def(id)
+    if not def or not def.pipes then
+        return nil
+    end
+    local ox, oy, oz = block.seek_origin(x, y, z)
+    if y ~= oy then
+        return nil -- pipes lie on the floor: bottom layer only
+    end
+    if not def.ports then
+        return building.ANY
+    end
+    for _, port in ipairs(def.ports) do
+        local side = building.SIDES[port.side]
+        if ox + port.cell[1] == x and oz + port.cell[2] == z
+                and side[1] == dx and side[2] == dz then
+            return port.mode
+        end
+    end
+    return nil
+end
+
+-- world positions of the ports of a building at origin (ox, oy, oz):
+-- list of {x, y, z, dx, dz, mode}; buildings without `ports` get every
+-- outer side of the bottom layer with mode building.ANY
+function building.ports(id, ox, oy, oz)
+    local def = building.get_def(id)
+    if not def or not def.pipes then
+        return {}
+    end
+    local list = {}
+    if def.ports then
+        for _, port in ipairs(def.ports) do
+            local side = building.SIDES[port.side]
+            table.insert(list, {ox + port.cell[1], oy, oz + port.cell[2],
+                                side[1], side[2], port.mode})
+        end
+        return list
+    end
+    local sx, _, sz = block.get_size(id)
+    for cx = 0, sx - 1 do
+        for cz = 0, sz - 1 do
+            for _, side in pairs(building.SIDES) do
+                local nx, nz = cx + side[1], cz + side[2]
+                if nx < 0 or nx >= sx or nz < 0 or nz >= sz then
+                    table.insert(list, {ox + cx, oy, oz + cz, side[1], side[2], building.ANY})
+                end
+            end
+        end
+    end
+    return list
+end
+
+-- origins of all placed buildings on layer y inside the x/z area
+function building.find_all(x0, z0, x1, z1, y)
+    local found = {}
+    for x = x0, x1 do
+        for z = z0, z1 do
+            local id = block.get(x, y, z)
+            if id > 0 and not block.is_segment(x, y, z) and building.get_def(id) then
+                table.insert(found, {id = id, x = x, y = y, z = z})
+            end
+        end
+    end
+    return found
 end
 
 -- handle for the building occupying (x, y, z) (any segment), or nil

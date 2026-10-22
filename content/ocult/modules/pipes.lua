@@ -1,5 +1,6 @@
 -- Pipes: 1x1 blocks on the floor that auto-connect to horizontal neighbours:
--- other pipes and buildings whose definition has `pipes = true`.
+-- other pipes and buildings whose definition has `pipes = true` (only at
+-- their `ports` if those are listed, see rts/building).
 --
 -- Shapes are block variants (blocks/pipe.json), each modelled with these
 -- connections before rotation:
@@ -75,17 +76,13 @@ function this.is_pipe(x, y, z)
     return block.get(x, y, z) == pipe_id()
 end
 
--- a pipe at a neighbouring cell would connect to (x, y, z)
-function this.connects_to(x, y, z)
+-- a pipe standing next to (x, y, z), in direction (dx, dz) from it,
+-- would connect to it
+function this.connects_to(x, y, z, dx, dz)
     if this.is_pipe(x, y, z) then
         return true
     end
-    local id = block.get(x, y, z)
-    if id <= 0 then
-        return false
-    end
-    local def = building.get_def(id)
-    return def ~= nil and def.pipes == true
+    return building.port_mode(x, y, z, dx, dz) ~= nil
 end
 
 -- picks the model and rotation for the pipe at (x, y, z) from its neighbours
@@ -95,7 +92,7 @@ function this.refresh(x, y, z)
     end
     local mask = 0
     for _, d in ipairs(DIRS) do
-        if this.connects_to(x + d.dx, y, z + d.dz) then
+        if this.connects_to(x + d.dx, y, z + d.dz, -d.dx, -d.dz) then
             mask = mask + d.bit
         end
     end
