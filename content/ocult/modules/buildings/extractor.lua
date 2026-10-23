@@ -13,11 +13,11 @@ return {
     end,
     pipes = true,
     -- cell = {x, z}: 0..1 from the north-west corner; sides follow the
-    -- nozzles of the model. TODO: check which ones are inputs / outputs
+    -- nozzles of the model
     ports = {
-        {cell = {0, 0}, side = "west", mode = "in"},
-        {cell = {1, 0}, side = "east", mode = "in"},
-        {cell = {0, 1}, side = "south", mode = "out"},
-        {cell = {1, 1}, side = "south", mode = "out"},
+        {cell = {0, 0}, side = "west", mode = "out"},
+        {cell = {1, 0}, side = "east", mode = "out"},
+        {cell = {0, 1}, side = "south", mode = "in"},
+        {cell = {1, 1}, side = "south", mode = "in"},
     },
 }
