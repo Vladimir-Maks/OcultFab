@@ -5,8 +5,10 @@
     <container id="portrait" pos="10,10" size="130,130" color="#2a1824FF"/>
     <container id="info" pos="150,10" size="360,130" color="#00000000">
         <label id="sel_title" pos="0,0" size="360,24" color="#e0c8d0FF"></label>
-        <label id="sel_desc" pos="0,30" size="360,100" multiline="true" text-wrap="true"
+        <label id="sel_desc" pos="0,30" size="360,76" multiline="true" text-wrap="true"
                color="#a08890FF"></label>
+        <!-- short messages ("Склад полон"...), see command_panel.notify -->
+        <label id="status" pos="0,110" size="360,20" color="#ff7060FF"></label>
     </container>
     <container id="commands" pos="520,10" size="230,130" color="#0a0608FF"/>
 </container>

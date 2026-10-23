@@ -1,0 +1,10 @@
+<!-- Core storage window: opened as an overlay by the core's "Склад" button,
+     closes with Esc. Rows are built by storage.xml.lua -->
+<container size="360,360" color="#140c12F0"
+           position-func="gui.get_viewport()[1] / 2 - 180, gui.get_viewport()[2] / 2 - 200">
+    <label pos="12,10" size="300,22" color="#e0c8d0FF">Склад</label>
+    <button pos="324,6" size="28,28" onclick="hud.close('ocult:storage')" tooltip="Закрыть (Esc)">x</button>
+    <panel id="rows" pos="12,64" size="336,250" color="#0a0608FF" padding="4,4,4,4"
+           interval="2" scrollable="true" max-length="250"/>
+    <label id="capacity" pos="12,324" size="336,24" color="#c8a0b0FF"></label>
+</container>

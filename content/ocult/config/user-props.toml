@@ -1,0 +1,3 @@
+# the player can break it (raised layer, touching air on a side); what falls
+# out is the block's "base:loot" (see ocult:mining)
+"ocult:minable" = {}

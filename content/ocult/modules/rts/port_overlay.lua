@@ -10,6 +10,7 @@ local this = {}
 -- letter size: world units per font pixel (default font line is ~16 px)
 local LETTER_SCALE = 0.045
 local LETTER_LIFT = 0.02 -- above the floor, so it isn't hidden by the marker
+local SCAN_RADIUS = 48 -- buildings are looked up this far from the camera focus
 
 local STYLES = {
     ["in"] = {letter = "И", marker = "blocks:green"},
@@ -59,12 +60,17 @@ local function show_port(axis_x, axis_y, x, y, z, dx, dz, mode)
     table.insert(texts, id)
 end
 
-function this.show(cam)
+-- cam: the RTS camera, focus: {x, y, z} it looks at
+function this.show(cam, focus)
     this.hide()
     shown = true
     local axis_x, axis_y = letter_axes(cam)
-    local y = arena.FLOOR_TOP + 1
-    for _, b in ipairs(building.find_all(0, 0, arena.SIZE - 1, arena.SIZE - 1, y)) do
+    local y = arena.LEVEL
+    local cx, cz = math.floor(focus[1]), math.floor(focus[3])
+    local x0, z0 = math.max(0, cx - SCAN_RADIUS), math.max(0, cz - SCAN_RADIUS)
+    local x1 = math.min(arena.SIZE - 1, cx + SCAN_RADIUS)
+    local z1 = math.min(arena.SIZE - 1, cz + SCAN_RADIUS)
+    for _, b in ipairs(building.find_all(x0, z0, x1, z1, y)) do
         for _, p in ipairs(building.ports(b.id, b.x, b.y, b.z)) do
             show_port(axis_x, axis_y, unpack(p))
         end
@@ -80,9 +86,9 @@ function this.hide()
     shown = false
 end
 
-function this.set_visible(flag, cam)
+function this.set_visible(flag, cam, focus)
     if flag and not shown then
-        this.show(cam)
+        this.show(cam, focus)
     elseif not flag and shown then
         this.hide()
     end

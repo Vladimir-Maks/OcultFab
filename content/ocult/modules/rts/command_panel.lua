@@ -4,8 +4,13 @@
 -- cell with `slot`, numbered left to right, top to bottom:
 --    1  2  3  4
 --    5  6  7  8
---    9 10 11 12   (12 - "Отмена" while a placement mode is active)
+--    9 10 11 12   (12 - "Отмена" in a mode / "Назад" in a submenu)
 -- Commands without a slot take the first free cells.
+-- A command with `submenu = "x"` opens the menu "x": then only commands with
+-- `menu = "x"` are shown (commands without `menu` live in the root menu).
+-- `cost = {stone = 10}` is shown in the button tooltip.
+local economy = require "ocult:economy"
+
 local this = {}
 
 local LAYOUT = "ocult:rts_panel"
@@ -16,12 +21,34 @@ local CANCEL_SLOT = COLS * ROWS
 local BUTTON_W, BUTTON_H = 52, 38
 local GAP = 4
 local ACTIVE_COLOR = "#8a2a40FF"
+local STATUS_TIME = 3 -- seconds a message stays
 
 local doc
+local status_until = 0
+local described -- object whose description is on screen (kept up to date)
 
 function this.open()
     hud.open_permanent(LAYOUT)
     doc = Document.new(LAYOUT)
+end
+
+-- short message under the description ("Склад полон"...)
+function this.notify(text)
+    if doc then
+        doc.status.text = text
+        status_until = time.uptime() + STATUS_TIME
+    end
+end
+
+-- call every frame: hides old messages, refreshes live descriptions
+function this.update()
+    if doc and described and described.is_alive() then
+        doc.sel_desc.text = described.get_description()
+    end
+    if doc and status_until > 0 and time.uptime() > status_until then
+        doc.status.text = ""
+        status_until = 0
+    end
 end
 
 -- true if the cursor is over the panel (clicks shouldn't reach the world)
@@ -75,16 +102,35 @@ local function layout(list, reserved)
     return cells
 end
 
--- mode: active placement mode (its button is highlighted, "Отмена" exits)
-local function show_buttons(list, on_command, mode)
+local function tooltip(cmd)
+    local text = cmd.hint or cmd.label
+    if cmd.cost then
+        text = text .. " (" .. economy.cost_text(cmd.cost) .. ")"
+    end
+    return text
+end
+
+-- mode: active placement mode (its button is highlighted, "Отмена" exits);
+-- menu: {id, on_back} while a submenu is open
+local function show_buttons(list, on_command, mode, menu)
     doc.commands:clear()
-    for slot, cmd in pairs(layout(list, mode and CANCEL_SLOT)) do
+    local menu_id = menu and menu.id
+    local visible = {}
+    for _, cmd in ipairs(list) do
+        if cmd.menu == menu_id then
+            table.insert(visible, cmd)
+        end
+    end
+    local reserved = (mode or menu) and CANCEL_SLOT
+    for slot, cmd in pairs(layout(visible, reserved)) do
         local active = mode and mode.command.id == cmd.id
-        add_button(slot, cmd.label, cmd.hint or cmd.label, active and ACTIVE_COLOR or nil,
+        add_button(slot, cmd.label, tooltip(cmd), active and ACTIVE_COLOR or nil,
             function() on_command(cmd.id) end)
     end
     if mode then
-        add_button(CANCEL_SLOT, "Отмена", "Выйти из режима установки (Esc)", nil, mode.on_cancel)
+        add_button(CANCEL_SLOT, "Отмена", "Выйти из режима (Esc)", nil, mode.on_cancel)
+    elseif menu then
+        add_button(CANCEL_SLOT, "Назад", "Вернуться к командам", nil, menu.on_back)
     end
 end
 
@@ -115,35 +161,39 @@ end
 
 -- objects: selected RTS objects; on_command(id) is called on button click;
 -- default_commands are shown when nothing is selected;
--- mode: {command, preview, on_cancel} while a placement mode is active
-function this.show(objects, on_command, default_commands, mode)
+-- mode: {command, preview, on_cancel} while a placement mode is active;
+-- menu: {id, on_back} while a submenu is open
+function this.show(objects, on_command, default_commands, mode, menu)
     if not doc then
         return
     end
     local first = objects[1]
+    described = nil
     if mode then
         show_portrait(nil, mode.preview)
-        doc.sel_title.text = "Установка: " .. mode.command.label
+        local prefix = mode.command.place and "Установка: " or "Цель: "
+        doc.sel_title.text = prefix .. mode.command.label
         doc.sel_desc.text = mode.command.hint or ""
-        show_buttons(first and first.get_commands() or default_commands or {}, on_command, mode)
+        show_buttons(first and first.get_commands() or default_commands or {}, on_command, mode, menu)
         return
     end
     if not first then
         show_portrait(nil)
         doc.sel_title.text = ""
         doc.sel_desc.text = ""
-        show_buttons(default_commands or {}, on_command)
+        show_buttons(default_commands or {}, on_command, nil, menu)
         return
     end
 
     show_portrait(first)
     if #objects > 1 then
-        doc.sel_title.text = first.get_title() .. " и ещё " .. (#objects - 1)
+        doc.sel_title.text = first.get_title() .. " и еще " .. (#objects - 1)
     else
         doc.sel_title.text = first.get_title()
     end
     doc.sel_desc.text = first.get_description()
-    show_buttons(first.get_commands(), on_command)
+    described = first
+    show_buttons(first.get_commands(), on_command, nil, menu)
 end
 
 return this

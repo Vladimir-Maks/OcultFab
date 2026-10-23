@@ -1,9 +1,16 @@
 -- Client-side selection and orders.
 --   LMB on a unit/building - select it (shift - add/remove)
 --   LMB on the ground      - clear selection
+--   LMB on minable stone   - mine it (see ocult:mining)
 --   LMB drag               - select all units inside the box (shift - add)
---   RMB                    - order selected objects (move / rally point)
+--   RMB                    - order selected objects (move / rally point);
+--                            on an item (or right next to it) workers gather
 -- Commands with `place` switch to placement mode first (see rts/placement).
+-- Commands with `target = "zone"` ask for an area first: LMB click - a square
+-- around the point, LMB drag - a rectangle; RMB / Esc cancel. The handler
+-- gets {x0, z0, x1, z1}. A handler returning a string shows it as a message.
+-- `submenu` commands switch the command card (see rts/command_panel); a
+-- `cost` is checked before a placement starts (the handler pays).
 -- With nothing selected the panel shows default commands (rts/commander).
 local unit = require "ocult:rts/unit"
 local building = require "ocult:rts/building"
@@ -12,21 +19,45 @@ local cursor_ray = require "ocult:cursor_ray"
 local command_panel = require "ocult:rts/command_panel"
 local commander = require "ocult:rts/commander"
 local port_overlay = require "ocult:rts/port_overlay"
+local rts_camera = require "ocult:rts_camera"
+local mining = require "ocult:mining"
+local drops = require "ocult:drops"
+local economy = require "ocult:economy"
 
 local this = {}
 
 local BOX_LAYOUT = "ocult:selection_box"
 local DRAG_THRESHOLD = 6 -- px before a click turns into a box
+local ZONE_RADIUS = 15   -- blocks around the clicked point for a zone target
+local ITEM_PICK_RADIUS = 0.8 -- RMB this close to an item counts as clicking it
 
 local selected = {} -- list of handles (unit components / building handles)
 local prev_left, prev_right = false, false
-local shown_mode -- placement command the panel currently shows
+local shown_mode -- mode command the panel currently shows
+local targeting  -- {cmd, holders} while waiting for a zone
+local menu_id    -- open submenu of the command card, nil = root
 local drag_start -- screen pos where LMB went down (outside of UI)
 local dragging = false
 local box_doc
 local cam, pid
 
 local refresh
+
+-- command of the active mode: placement or zone targeting
+local function mode_command()
+    return placement.get_command() or (targeting and targeting.cmd)
+end
+
+local function cancel_modes()
+    placement.cancel()
+    targeting = nil
+end
+
+local function report(result)
+    if type(result) == "string" then
+        command_panel.notify(result)
+    end
+end
 
 -- who runs panel commands: the selection, or the defaults if it's empty
 local function command_holders()
@@ -47,11 +78,27 @@ local function run_command(id)
         return
     end
     local cmd = holders[1].find_command(id)
+    if cmd.submenu then
+        menu_id = cmd.submenu
+        refresh()
+        return
+    end
+    if cmd.cost and not economy.can_afford(cmd.cost) then
+        command_panel.notify("Не хватает: " .. economy.cost_text(cmd.cost))
+        return
+    end
+    if cmd.target == "zone" then
+        placement.cancel()
+        targeting = {cmd = cmd, holders = holders}
+        refresh()
+        return
+    end
     if cmd.place then
+        targeting = nil
         -- one builder per building, like a zerg drone
         placement.start(cmd.place, function(origin)
             if holders[1].is_alive() then
-                holders[1].run_command(id, origin)
+                report(holders[1].run_command(id, origin))
             end
         end, cmd.continuous and function(pos)
             holders[1].run_command(id .. "_remove", pos)
@@ -60,24 +107,32 @@ local function run_command(id)
         return
     end
     for _, obj in ipairs(holders) do
-        obj.run_command(id)
+        report(obj.run_command(id))
     end
     refresh()
 end
 
 refresh = function()
     local mode
-    shown_mode = placement.get_command()
+    shown_mode = mode_command()
     if shown_mode then
-        local def = building.get_def(block.index(placement.get_block()))
+        local def = placement.get_block() and building.get_def(block.index(placement.get_block()))
         mode = {
             command = shown_mode,
             preview = def and def.preview,
-            on_cancel = function() placement.cancel() end,
+            on_cancel = cancel_modes,
         }
     end
-    command_panel.show(selected, run_command, commander.commands, mode)
-    port_overlay.set_visible(shown_mode ~= nil and shown_mode.show_ports == true, cam)
+    local menu = menu_id and {
+        id = menu_id,
+        on_back = function()
+            menu_id = nil
+            refresh()
+        end,
+    }
+    command_panel.show(selected, run_command, commander.commands, mode, menu)
+    port_overlay.set_visible(shown_mode ~= nil and shown_mode.show_ports == true, cam,
+        rts_camera.get_focus())
 end
 
 function this.set(list)
@@ -91,7 +146,8 @@ function this.set(list)
             table.insert(selected, obj)
         end
     end
-    placement.cancel()
+    cancel_modes()
+    menu_id = nil
     refresh()
 end
 
@@ -135,7 +191,8 @@ local function object_at(hit)
 end
 
 local function on_left_click()
-    local obj = object_at(pick())
+    local hit = pick()
+    local obj = object_at(hit)
     local shift = input.is_pressed("key:left-shift")
     if obj then
         if shift then
@@ -143,14 +200,107 @@ local function on_left_click()
         else
             this.set({obj})
         end
+    elseif hit and not hit.entity and hit.iendpoint
+            and mining.can_mine(unpack(hit.iendpoint)) then
+        -- mining keeps the selection
+        local _, reason = mining.try_mine(unpack(hit.iendpoint))
+        if reason then
+            command_panel.notify(reason)
+        end
     elseif not shift then
         this.set({})
     end
 end
 
+-- floor point under a screen position (buildings are see-through)
+local function ground_point(screen)
+    local hit = cursor_ray.pick(cam, screen, nil, building.block_names())
+    return hit and hit.endpoint
+end
+
+local function finish_targeting(a, b, dragged)
+    local t = targeting
+    targeting = nil
+    local zone
+    if dragged then
+        local p, q = ground_point(a), ground_point(b)
+        if p and q then
+            zone = {math.min(p[1], q[1]), math.min(p[3], q[3]),
+                    math.max(p[1], q[1]), math.max(p[3], q[3])}
+        end
+    else
+        local p = ground_point(b)
+        if p then
+            zone = {p[1] - ZONE_RADIUS, p[3] - ZONE_RADIUS,
+                    p[1] + ZONE_RADIUS, p[3] + ZONE_RADIUS}
+        end
+    end
+    if zone then
+        for _, obj in ipairs(t.holders) do
+            if obj.is_alive() then
+                report(obj.run_command(t.cmd.id, zone))
+            end
+        end
+    end
+    refresh()
+end
+
+local function walkable(x, y, z)
+    local id = block.get(x, y, z)
+    return (id == 0 or block.name(id) == "ocult:pipe") and block.is_solid_at(x, y - 1, z)
+end
+
+-- up to n distinct walkable cells around pos (pos first), so a group
+-- doesn't fight for one cell
+local function spread_cells(pos, n)
+    local cells, seen, queue = {}, {}, {pos}
+    seen[pos[1] .. "," .. pos[3]] = true
+    local head = 1
+    while head <= #queue and #cells < n and head < 200 do
+        local c = queue[head]
+        head = head + 1
+        if walkable(c[1], c[2], c[3]) then
+            table.insert(cells, c)
+        end
+        for _, d in ipairs({{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) do
+            local nc = {c[1] + d[1], c[2], c[3] + d[2]}
+            local key = nc[1] .. "," .. nc[3]
+            if not seen[key] then
+                seen[key] = true
+                table.insert(queue, nc)
+            end
+        end
+    end
+    return cells
+end
+
+-- an item under the cursor: hit directly, or lying right next to the hit point
+local function item_at(hit)
+    if hit.entity and drops.get(hit.entity) then
+        return hit.entity
+    end
+    local p = hit.endpoint
+    local best, best_d
+    for _, d in ipairs(drops.list()) do
+        local dx, dz = d.pos[1] - p[1], d.pos[3] - p[3]
+        local dist = dx * dx + dz * dz
+        if dist <= ITEM_PICK_RADIUS * ITEM_PICK_RADIUS and (not best or dist < best_d) then
+            best, best_d = d.uid, dist
+        end
+    end
+    return best
+end
+
 local function on_right_click()
     local hit = pick()
     if not hit then
+        return
+    end
+    local item = item_at(hit)
+    if item then
+        for _, obj in ipairs(selected) do
+            obj.on_order(nil, item)
+        end
         return
     end
     local pos
@@ -164,8 +314,17 @@ local function on_right_click()
         pos = {math.floor(hit.endpoint[1]), math.floor(hit.endpoint[2]),
                math.floor(hit.endpoint[3])}
     end
+    local units = {}
     for _, obj in ipairs(selected) do
-        obj.on_order(pos, hit.entity)
+        if type(obj.key()) == "number" then
+            table.insert(units, obj)
+        else
+            obj.on_order(pos, hit.entity, hit.iendpoint) -- buildings: rally point
+        end
+    end
+    local cells = spread_cells(pos, #units)
+    for i, obj in ipairs(units) do
+        obj.on_order(cells[i] or pos, hit.entity, hit.iendpoint)
     end
 end
 
@@ -231,8 +390,8 @@ function this.init(camera, playerid)
     -- Esc leaves placement mode instead of opening the pause menu
     -- (handlers run newest first, true stops the chain)
     input.add_callback("key:escape", function()
-        if placement.is_active() then
-            placement.cancel()
+        if mode_command() then
+            cancel_modes()
             return true
         end
     end)
@@ -256,9 +415,13 @@ function this.update()
     end
     -- before any early return: the mode can end while the cursor is over
     -- the panel (the "Отмена" button)
-    if placement.get_command() ~= shown_mode then
-        refresh() -- entered/left placement mode (Esc, RMB, new selection...)
+    if mode_command() ~= shown_mode then
+        if not mode_command() then
+            menu_id = nil -- a build is placed / cancelled: back to the root card
+        end
+        refresh() -- entered/left a mode (Esc, RMB, new selection...)
     end
+    command_panel.update()
 
     local left = input.is_pressed("mouse:left")
     local right = input.is_pressed("mouse:right")
@@ -278,8 +441,10 @@ function this.update()
             show_box(drag_start, mouse)
         end
         if left_release then
-            if dragging then
-                hide_box()
+            hide_box()
+            if targeting then
+                finish_targeting(drag_start, mouse, dragging)
+            elseif dragging then
                 on_box_select(drag_start, mouse)
             else
                 on_left_click()
@@ -294,6 +459,11 @@ function this.update()
     end
     if placement.is_active() then
         placement.update(cam, left_click, right_click, left, right)
+        return
+    end
+    if targeting and right_click then
+        targeting = nil
+        refresh()
         return
     end
     if left_click then

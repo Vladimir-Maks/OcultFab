@@ -8,7 +8,8 @@
 --
 -- def fields:
 --   title       - display name
---   description - text for the info panel
+--   description - text for the info panel, or function(self) -> text
+--                 (re-read every frame, for live numbers)
 --   preview     - {model = "name", center = {x, y, z}} 3D portrait in the panel;
 --                 center is the point the portrait camera looks at (model space)
 --   commands    - list of {id=, label=, hint=, slot=, place=}; slot is the cell
@@ -28,7 +29,12 @@ function object.extend(target, def, highlight)
     target.def = def
 
     function target.get_title() return def.title or "?" end
-    function target.get_description() return def.description or "" end
+    function target.get_description()
+        if type(def.description) == "function" then
+            return def.description(target)
+        end
+        return def.description or ""
+    end
     function target.get_preview() return def.preview end
     function target.get_commands() return def.commands or {} end
 
@@ -56,11 +62,11 @@ function object.extend(target, def, highlight)
             highlight(flag)
         end
     end
-    function target.is_selected() return selected end
 
     -- right click with this object selected; pos is the block position
-    -- above the clicked surface, target_uid - clicked entity (if any)
-    function target.on_order(pos, target_uid) end
+    -- above the clicked surface, target_uid - clicked entity (if any),
+    -- target_block - {x, y, z} of the clicked block (if any)
+    function target.on_order(pos, target_uid, target_block) end
 end
 
 return object

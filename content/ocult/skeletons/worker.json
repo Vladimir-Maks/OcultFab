@@ -1,5 +1,11 @@
 {
     "root": {
-        "model": "ocult_worker"
+        "model": "ocult_worker",
+        "nodes": [
+            {
+                "name": "item",
+                "offset": [0, 0.05, -0.45]
+            }
+        ]
     }
 }

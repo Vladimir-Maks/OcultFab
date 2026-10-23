@@ -1,10 +1,9 @@
--- Top-down RTS camera (StarCraft-like): free cursor, pan, zoom, rotate.
+-- Top-down RTS camera (StarCraft-like): free cursor, pan, zoom.
 --
 -- Controls:
 --   WASD / arrows / screen edge - pan
 --   middle mouse drag           - grab and drag the ground
 --   mouse wheel                 - zoom
---   Q / E                       - rotate
 --   left shift                  - faster pan
 
 local arena = require "ocult:arena"
@@ -18,16 +17,16 @@ local PITCH_FAR = 65    -- pitch (degrees) at MAX_DIST
 local FOV = 50
 local PAN_SPEED = 1.2   -- in camera distances per second
 local EDGE_MARGIN = 6   -- px
-local ROTATE_SPEED = 120 -- degrees per second
 local ZOOM_STEP = 0.15  -- fraction of distance per wheel notch
 local SMOOTHING = 12
+local YAW = 45          -- degrees, fixed view direction
 
 local cam
 local pid
 
 -- target values; `cur` is the smoothed state that's actually rendered
-local target = {x = 0, z = 0, dist = 40, yaw = 45}
-local cur = {x = 0, y = 0, z = 0, dist = 40, yaw = 45}
+local target = {x = 0, z = 0, dist = 40}
+local cur = {x = 0, y = 0, z = 0, dist = 40}
 
 local function lerp(a, b, t)
     return a + (b - a) * t
@@ -37,9 +36,9 @@ local function key(name)
     return input.is_pressed("key:" .. name)
 end
 
--- ground-plane forward/right vectors for the current yaw
-local function axes(yaw)
-    local r = math.rad(yaw)
+-- ground-plane forward/right vectors of the view
+local function axes()
+    local r = math.rad(YAW)
     local sy, cy = math.sin(r), math.cos(r)
     return -sy, -cy, cy, -sy
 end
@@ -63,7 +62,7 @@ local function keep_cursor_free()
 end
 
 local function handle_input(dt)
-    local fx, fz, rx, rz = axes(cur.yaw)
+    local fx, fz, rx, rz = axes()
     local mx, my = 0, 0
 
     if key("w") or key("up") then my = my + 1 end
@@ -98,18 +97,15 @@ local function handle_input(dt)
     local scroll = input.get_mouse_scroll()
     if scroll ~= 0 then
         target.dist = target.dist * (1 - ZOOM_STEP) ^ scroll
-        target.dist = math.max(MIN_DIST, math.min(MAX_DIST, target.dist))
+        target.dist = math.clamp(target.dist, MIN_DIST, MAX_DIST)
     end
-
-    -- if key("q") then target.yaw = target.yaw - ROTATE_SPEED * dt end
-    -- if key("e") then target.yaw = target.yaw + ROTATE_SPEED * dt end
 
     target.x, target.z = arena.clamp(target.x, target.z)
 end
 
 local function apply()
     local pitch = math.rad(pitch_for(cur.dist))
-    local yaw = math.rad(cur.yaw)
+    local yaw = math.rad(YAW)
     local horiz = math.cos(pitch) * cur.dist
     local pos = {
         cur.x + math.sin(yaw) * horiz,
@@ -141,7 +137,6 @@ function this.init(playerid)
     player.set_interaction_distance(pid, 0)
     player.set_camera(pid, cam:get_index())
     input.set_enabled("camera.mode", false)
-    hud.set_allow_pause(true)
     apply()
 end
 
@@ -156,12 +151,16 @@ function this.update(dt)
     cur.x = lerp(cur.x, target.x, t)
     cur.z = lerp(cur.z, target.z, t)
     cur.dist = lerp(cur.dist, target.dist, t)
-    cur.yaw = lerp(cur.yaw, target.yaw, t)
     apply()
 end
 
 function this.get_camera()
     return cam
+end
+
+-- glide over to look at (x, z)
+function this.focus_on(x, z)
+    target.x, target.z = arena.clamp(x, z)
 end
 
 -- current point on the ground the camera looks at

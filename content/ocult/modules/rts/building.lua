@@ -17,6 +17,7 @@
 --   }
 
 local object = require "ocult:rts/object"
+local arena = require "ocult:arena"
 local markers = require "ocult:rts/markers"
 
 local building = {}
@@ -75,6 +76,28 @@ function building.snap(block_name, point, y)
     }
 end
 
+-- the free floor cell around a sx x sz footprint at origin nearest to
+-- `from` (pipes count as free: units walk over them), or nil
+function building.ring_cell(origin, sx, sz, from)
+    local pipe = block.index("ocult:pipe")
+    local best, best_d
+    for x = origin[1] - 1, origin[1] + sx do
+        for z = origin[3] - 1, origin[3] + sz do
+            local ring = x < origin[1] or x >= origin[1] + sx
+                or z < origin[3] or z >= origin[3] + sz
+            local id = block.get(x, origin[2], z)
+            if ring and (id == 0 or id == pipe) and block.is_solid_at(x, origin[2] - 1, z) then
+                local dx, dz = x + 0.5 - from[1], z + 0.5 - from[3]
+                local d = dx * dx + dz * dz
+                if not best or d < best_d then
+                    best, best_d = {x, origin[2], z}, d
+                end
+            end
+        end
+    end
+    return best
+end
+
 -- middle cell of the footprint (where a morphing unit should stand)
 function building.center_cell(block_name, origin)
     local sx, _, sz = size_of(block_name)
@@ -86,10 +109,19 @@ function building.footprint(block_name, origin)
     return origin[1], origin[3], sx, sz
 end
 
+-- only on the floor level (the platform and mined-out ground), never on
+-- top of the raised stone
+function building.is_floor_level(y)
+    return y == arena.LEVEL
+end
+
 -- free space and solid ground under the whole footprint
 function building.can_place(block_name, origin)
     local sx, sy, sz = size_of(block_name)
     local ox, oy, oz = origin[1], origin[2], origin[3]
+    if not building.is_floor_level(oy) then
+        return false
+    end
     for x = ox, ox + sx - 1 do
         for z = oz, oz + sz - 1 do
             if not block.is_solid_at(x, oy - 1, z) then

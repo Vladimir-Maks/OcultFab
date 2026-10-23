@@ -5,11 +5,6 @@ local this = {}
 
 local MAX_DISTANCE = 500
 
-local function normalize(v)
-    local len = math.sqrt(v[1] * v[1] + v[2] * v[2] + v[3] * v[3])
-    return {v[1] / len, v[2] / len, v[3] / len}
-end
-
 -- returns origin, direction of the ray under the screen point (defaults to cursor)
 function this.get_ray(cam, screen_pos)
     local w, h = unpack(gui.get_viewport())
@@ -22,7 +17,7 @@ function this.get_ray(cam, screen_pos)
     local sy = ny * tan_half
 
     local f, r, u = cam:get_front(), cam:get_right(), cam:get_up()
-    local dir = normalize({
+    local dir = vec3.normalize({
         f[1] + r[1] * sx + u[1] * sy,
         f[2] + r[2] * sx + u[2] * sy,
         f[3] + r[3] * sx + u[3] * sy,

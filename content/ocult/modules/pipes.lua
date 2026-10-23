@@ -119,9 +119,9 @@ function this.refresh_ring(x0, y, z0, w, d)
     end
 end
 
--- pipes stand only on solid blocks (the stone floor), never on other pipes
+-- same rules as any building: floor level, free cell, solid ground
 function this.can_place(x, y, z)
-    return block.is_solid_at(x, y - 1, z) and block.is_replaceable_at(x, y, z)
+    return building.can_place(this.BLOCK, {x, y, z})
 end
 
 function this.place(x, y, z)

@@ -7,6 +7,10 @@
     "altar",
     "pipe",
     "extractor",
-    "core"
+    "core",
+    "rubinyte_ore",
+    "mana_ore",
+    "iron_ore",
+    "stone"
   ]
 }

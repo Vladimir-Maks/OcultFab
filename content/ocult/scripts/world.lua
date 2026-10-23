@@ -1,22 +1,21 @@
 local arena = require "ocult:arena"
 local building = require "ocult:rts/building"
+local economy = require "ocult:economy"
 
--- once per world: the core in the middle of the arena (+ dev test cultists).
--- Separate markers, so worlds made before the core existed get it too.
-local CORE_MARKER = "world:data/ocult/core_spawned"
-local UNITS_MARKER = "world:data/ocult/test_units_spawned"
+-- once per world: the core in the middle of the arena + the first cultist
+local MARKER = "world:data/ocult/initialized"
 local CORE = "ocult:core"
-local TEST_UNITS = 3
+local START_UNITS = 1
 
 local pending = false
 
 function on_world_open()
-    pending = not file.exists(CORE_MARKER) or not file.exists(UNITS_MARKER)
+    economy.load()
+    pending = not file.exists(MARKER)
 end
 
-local function mark(path)
-    file.mkdirs("world:data/ocult")
-    file.write(path, "")
+function on_world_save()
+    economy.save()
 end
 
 function on_world_tick()
@@ -28,17 +27,13 @@ function on_world_tick()
     if block.get(cx, cy - 1, cz) == -1 then
         return
     end
-    if not file.exists(CORE_MARKER) then
-        local sx, _, sz = block.get_size(block.index(CORE))
-        building.place(CORE, {cx - math.floor(sx / 2), cy, cz - math.floor(sz / 2)})
-        mark(CORE_MARKER)
+    local sx, _, sz = block.get_size(block.index(CORE))
+    building.place(CORE, {cx - math.floor(sx / 2), cy, cz - math.floor(sz / 2)})
+    -- a row just south of the core
+    for i = 1, START_UNITS do
+        entities.spawn("ocult:worker", {cx + i * 2 - START_UNITS - 0.5, cy + 0.5, cz + 3.5})
     end
-    if not file.exists(UNITS_MARKER) then
-        -- a row just south of the core
-        for i = 1, TEST_UNITS do
-            entities.spawn("ocult:worker", {cx + i * 2 - TEST_UNITS - 0.5, cy + 0.5, cz + 3.5})
-        end
-        mark(UNITS_MARKER)
-    end
+    file.mkdirs("world:data/ocult")
+    file.write(MARKER, "")
     pending = false
 end

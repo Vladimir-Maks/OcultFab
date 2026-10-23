@@ -1,0 +1,12 @@
+{
+    "texture": "rubinyte_ore",
+    "caption": "Рубинит",
+    "breakable": false,
+    "ocult:minable": true,
+    "base:loot": [
+        {
+            "item": "ocult:rubinyte_ore.item",
+            "count": 1
+        }
+    ]
+}
