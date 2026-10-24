@@ -1,0 +1,7 @@
+<!-- Short messages ("Склад полон"...) a bit below the screen centre,
+     see command_panel.notify. The backing shows only with a message. -->
+<container size="520,30" z-index="-2" interactive="false" color="#00000000"
+           position-func="gui.get_viewport()[1] / 2 - 260, gui.get_viewport()[2] / 2 + 80">
+    <label id="text" size="520,30" text-align="center" valign="center"
+           color="#ff8070FF" interactive="false"></label>
+</container>

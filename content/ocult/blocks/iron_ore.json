@@ -2,11 +2,5 @@
     "texture": "iron_ore",
     "caption": "Железная руда",
     "breakable": false,
-    "ocult:minable": true,
-    "base:loot": [
-        {
-            "item": "ocult:iron_ore.item",
-            "count": 3
-        }
-    ]
+    "ocult:minable": true
 }

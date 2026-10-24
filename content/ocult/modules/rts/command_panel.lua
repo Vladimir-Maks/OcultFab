@@ -14,6 +14,9 @@ local economy = require "ocult:economy"
 local this = {}
 
 local LAYOUT = "ocult:rts_panel"
+local NOTICE_LAYOUT = "ocult:notice"
+local NOTICE_BACKING = {0, 0, 0, 150}
+local NO_BACKING = {0, 0, 0, 0}
 local PORTRAIT_SIZE = 130
 local PORTRAIT_ROTATION = "45,-30,0" -- yaw, pitch, roll (degrees)
 local COLS, ROWS = 4, 3
@@ -24,18 +27,22 @@ local ACTIVE_COLOR = "#8a2a40FF"
 local STATUS_TIME = 3 -- seconds a message stays
 
 local doc
+local notice -- document of the message under the screen centre
 local status_until = 0
 local described -- object whose description is on screen (kept up to date)
 
 function this.open()
     hud.open_permanent(LAYOUT)
     doc = Document.new(LAYOUT)
+    hud.open_permanent(NOTICE_LAYOUT)
+    notice = Document.new(NOTICE_LAYOUT)
 end
 
--- short message under the description ("Склад полон"...)
+-- short message a bit below the screen centre ("Склад полон"...)
 function this.notify(text)
-    if doc then
-        doc.status.text = text
+    if notice then
+        notice.text.text = text
+        notice.root.color = NOTICE_BACKING
         status_until = time.uptime() + STATUS_TIME
     end
 end
@@ -45,8 +52,9 @@ function this.update()
     if doc and described and described.is_alive() then
         doc.sel_desc.text = described.get_description()
     end
-    if doc and status_until > 0 and time.uptime() > status_until then
-        doc.status.text = ""
+    if notice and status_until > 0 and time.uptime() > status_until then
+        notice.text.text = ""
+        notice.root.color = NO_BACKING
         status_until = 0
     end
 end

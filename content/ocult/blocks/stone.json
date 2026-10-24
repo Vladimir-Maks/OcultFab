@@ -2,11 +2,5 @@
     "texture": "stone",
     "caption": "Камень",
     "breakable": false,
-    "ocult:minable": true,
-    "base:loot": [
-        {
-            "item": "ocult:stone.item",
-            "count": 5
-        }
-    ]
+    "ocult:minable": true
 }

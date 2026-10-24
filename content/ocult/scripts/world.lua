@@ -7,7 +7,7 @@ local fog = require "ocult:fog"
 -- once per world: the core in the middle of the arena + the first cultist
 local MARKER = "world:data/ocult/initialized"
 local CORE = "ocult:core"
-local START_UNITS = 1
+local START_UNITS = 3
 
 local pending = false
 

@@ -7,7 +7,7 @@
 local this = {}
 
 this.SIZE = 1000
-this.PLATFORM = 20
+this.PLATFORM = 10
 this.FLOOR_TOP = 8               -- top block of the solid floor
 this.LEVEL = this.FLOOR_TOP + 1  -- walking level / the minable raised layer
 

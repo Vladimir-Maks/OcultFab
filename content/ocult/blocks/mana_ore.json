@@ -2,11 +2,5 @@
     "texture": "mana_ore",
     "caption": "Мана-кристалл",
     "breakable": false,
-    "ocult:minable": true,
-    "base:loot": [
-        {
-            "item": "ocult:mana_ore.item",
-            "count": 1
-        }
-    ]
+    "ocult:minable": true
 }
