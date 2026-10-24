@@ -8,7 +8,7 @@ local workers = require "ocult:workers"
 return {
     title = "Алтарь",
     description = function(self)
-        local text = "Темный алтарь, воздвигнутый ценой жизни культиста."
+        local text = "Темный алтарь, воздвигнутый ценой жизни."
         local job = logistics.job(self)
         if job then
             text = text .. string.format("\n\nПризыв: доставлено %d из %d", job.arrived, job.total)
