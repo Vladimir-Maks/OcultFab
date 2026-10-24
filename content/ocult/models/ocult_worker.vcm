@@ -1,2 +1,0 @@
-@box from (-0.3,-0.4,-0.3) to (0.3,0.4,0.3) texture "blocks:white"
-@box from (-0.15,0.1,-0.35) to (0.15,0.25,-0.3) texture "blocks:white"

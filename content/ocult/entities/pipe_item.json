@@ -1,0 +1,11 @@
+{
+    "components": [
+        "ocult:pipe_item"
+    ],
+    "hitbox": [0.2, 0.2, 0.2],
+    "body-type": "kinematic",
+    "blocking": false,
+    "selectable": false,
+    "save": false,
+    "skeleton-name": "ocult:pipe_item"
+}

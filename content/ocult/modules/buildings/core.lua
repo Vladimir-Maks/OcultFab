@@ -1,21 +1,9 @@
 -- Core (block ocult:core, 3x2x3): the main building, spawned in the middle
 -- of the arena when a world is created (scripts/world.lua). Workers bring
 -- resources here (ocult:economy) and new workers are summoned here.
+-- It is also the storage pipes import from / export to (ocult:logistics).
 local economy = require "ocult:economy"
-
-local WORKER = "ocult:worker"
-local WORKER_COST = {["ocult:stone.item"] = 10}
-local WORKER_LIMIT = 5
-
-local function count_workers()
-    local n = 0
-    for _, e in pairs(entities.get_all()) do
-        if e:def_name() == WORKER then
-            n = n + 1
-        end
-    end
-    return n
-end
+local workers = require "ocult:workers"
 
 return {
     title = "Ядро",
@@ -29,24 +17,26 @@ return {
     commands = {
         {id = "storage", label = "Склад", hint = "Открыть склад", slot = 1},
         {id = "market", label = "Рынок", hint = "Рынок (пока не работает)", slot = 2},
-        {id = "worker", label = "Культ.", slot = 9,
-         hint = "Призвать культиста: " .. economy.cost_text(WORKER_COST)
-             .. " (не больше " .. WORKER_LIMIT .. ")"},
+        {id = "worker", label = "Прихв.", slot = 9, cost = workers.COST,
+         hint = "Призвать прихвостня (не больше " .. workers.LIMIT .. ")"},
     },
     command_storage = function(self)
         hud.show_overlay("ocult:storage", false)
     end,
     command_market = function(self) end,
     command_worker = function(self)
-        if count_workers() >= WORKER_LIMIT then
-            return "Не больше " .. WORKER_LIMIT .. " культистов"
+        local reason = workers.check_limit()
+        if reason then
+            return reason
         end
-        if not economy.spend(WORKER_COST) then
-            return "Не хватает: " .. economy.cost_text(WORKER_COST)
+        if not economy.spend(workers.COST) then
+            return "Не хватает: " .. economy.cost_text(workers.COST)
         end
         -- in front of the south side
         local sx, _, sz = block.get_size(self.id)
-        entities.spawn(WORKER, {self.x + sx / 2, self.y + 0.5, self.z + sz + 0.5})
+        workers.reserve()
+        workers.spawn_reserved({self.x + sx / 2, self.y + 0.5, self.z + sz + 0.5})
     end,
     pipes = true,
+    storage = true,
 }

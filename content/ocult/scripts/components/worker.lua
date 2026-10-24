@@ -20,10 +20,9 @@ local EXTRACTOR_COST = {
 }
 
 unit.extend(this, {
-    title = "Культист",
-    description = "Рабочий.\nНенавидит запах винограда...",
-    color = {0.55, 0.15, 0.2},
-    preview = {model = "ocult_worker", center = {0, 0, 0}},
+    title = "Прихвостень",
+    description = "Прихвостень для работы.\nНенавидит запах винограда...",
+    preview = {model = "ocult_cultist_full", center = {0, 0, 0}},
     commands = {
         {id = "stop", label = "Стоп", hint = "Остановиться", slot = 2},
         {id = "gather", label = "Сбор", slot = 3, target = "zone",
@@ -60,6 +59,12 @@ end
 -- the carried item is shown in front of the cultist (skeleton bone "item")
 local rig = entity.skeleton
 local hand = rig:index("item")
+local arms = {rig:index("arm_l"), rig:index("arm_r")}
+
+-- arms stretch forward while carrying (rotation about X at the shoulder)
+local ARMS_CARRY_ANGLE = 85 -- degrees
+local ARMS_SPEED = 8        -- higher = faster raise/lower
+local arms_angle = 0
 
 carried = SAVED_DATA.carried
 
@@ -244,4 +249,15 @@ function command_extractor(origin)
         return "Не подойти к месту стройки"
     end
     return build("ocult:extractor", origin, EXTRACTOR_COST, stand, false)
+end
+
+local base_on_render = on_render
+function on_render(delta)
+    base_on_render(delta)
+    local target = carried and ARMS_CARRY_ANGLE or 0
+    arms_angle = arms_angle + (target - arms_angle) * (1 - math.exp(-ARMS_SPEED * delta))
+    local pose = mat4.rotate({1, 0, 0}, arms_angle)
+    for _, index in ipairs(arms) do
+        rig:set_matrix(index, pose)
+    end
 end

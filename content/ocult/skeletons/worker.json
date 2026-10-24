@@ -1,10 +1,20 @@
 {
     "root": {
-        "model": "ocult_worker",
+        "model": "ocult_cultist",
         "nodes": [
             {
+                "name": "arm_r",
+                "model": "ocult_cultist_arm_r",
+                "offset": [0.1625, 0.0094, 0]
+            },
+            {
+                "name": "arm_l",
+                "model": "ocult_cultist_arm_l",
+                "offset": [-0.1625, 0.0094, 0]
+            },
+            {
                 "name": "item",
-                "offset": [0, 0.05, -0.45]
+                "offset": [0, 0.0, -0.32]
             }
         ]
     }

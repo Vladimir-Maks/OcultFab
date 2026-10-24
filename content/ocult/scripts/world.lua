@@ -1,6 +1,7 @@
 local arena = require "ocult:arena"
 local building = require "ocult:rts/building"
 local economy = require "ocult:economy"
+local logistics = require "ocult:logistics"
 
 -- once per world: the core in the middle of the arena + the first cultist
 local MARKER = "world:data/ocult/initialized"
@@ -19,6 +20,7 @@ function on_world_save()
 end
 
 function on_world_tick()
+    logistics.update(1 / 20)
     if not pending then
         return
     end

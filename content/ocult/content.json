@@ -1,8 +1,4 @@
 {
-  "entities": [
-    "worker"
-  ],
-  "items": [],
   "blocks": [
     "altar",
     "pipe",
@@ -12,5 +8,10 @@
     "mana_ore",
     "iron_ore",
     "stone"
+  ],
+  "items": [],
+  "entities": [
+    "worker",
+    "pipe_item"
   ]
 }
