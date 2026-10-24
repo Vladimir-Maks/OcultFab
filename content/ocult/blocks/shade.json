@@ -1,0 +1,9 @@
+{
+    "model": "none",
+    "caption": "Тень тумана",
+    "light-passing": false,
+    "sky-light-passing": false,
+    "obstacle": false,
+    "selectable": false,
+    "breakable": false
+}

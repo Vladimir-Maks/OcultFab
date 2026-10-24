@@ -18,6 +18,7 @@
 
 local object = require "ocult:rts/object"
 local arena = require "ocult:arena"
+local fog = require "ocult:fog"
 local markers = require "ocult:rts/markers"
 
 local building = {}
@@ -122,6 +123,9 @@ function building.can_place(block_name, origin)
     if not building.is_floor_level(oy) then
         return false
     end
+    if fog.any_hidden(ox, oz, sx, sz) then
+        return false
+    end
     for x = ox, ox + sx - 1 do
         for z = oz, oz + sz - 1 do
             if not block.is_solid_at(x, oy - 1, z) then
@@ -138,9 +142,13 @@ function building.can_place(block_name, origin)
 end
 
 function building.place(block_name, origin)
-    block.place(origin[1], origin[2], origin[3], block.index(block_name), 0)
-    -- lazy: ocult:pipes requires this module
+    local id = block.index(block_name)
+    block.place(origin[1], origin[2], origin[3], id, 0)
     local sx, _, sz = size_of(block_name)
+    local def = building.get_def(id)
+    fog.reveal(origin[1] + sx / 2, origin[3] + sz / 2,
+        def and def.vision or fog.BUILDING_VISION)
+    -- lazy: ocult:pipes requires this module
     require("ocult:pipes").refresh_ring(origin[1], origin[2], origin[3], sx, sz)
 end
 

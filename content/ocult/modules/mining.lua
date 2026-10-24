@@ -5,6 +5,7 @@ local arena = require "ocult:arena"
 local economy = require "ocult:economy"
 local drops = require "ocult:drops"
 local util = require "base:util"
+local fog = require "ocult:fog"
 
 local this = {}
 
@@ -15,7 +16,7 @@ local SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 -- true if (x, y, z) is a minable block of the raised layer touching air
 -- (inside the arena) on at least one horizontal side
 function this.can_mine(x, y, z)
-    if y ~= arena.LEVEL then
+    if y ~= arena.LEVEL or fog.is_hidden(x, z) then
         return false
     end
     local id = block.get(x, y, z)

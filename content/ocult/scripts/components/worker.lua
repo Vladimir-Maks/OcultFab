@@ -8,6 +8,7 @@ local arena = require "ocult:arena"
 local drops = require "ocult:drops"
 local economy = require "ocult:economy"
 local core_site = require "ocult:rts/core_site"
+local fog = require "ocult:fog"
 
 local GATHER_RADIUS = 15 -- RMB on an item: gather within this many blocks of it
 
@@ -95,7 +96,9 @@ local function in_zone(pos)
 end
 
 local function next_drop()
-    return drops.nearest_free(get_pos(), function(pos) return in_zone(pos) end)
+    return drops.nearest_free(get_pos(), function(pos)
+        return in_zone(pos) and not fog.is_hidden(pos[1], pos[3])
+    end)
 end
 
 local function deliver()

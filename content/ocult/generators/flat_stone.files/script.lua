@@ -1,10 +1,14 @@
 -- Finite arena (sizes in ocult:arena): stone floating in the void, open floor
--- in the middle, around it one block higher stone with ore veins.
+-- in the middle, around it one block higher stone with ore veins, all of it
+-- under a layer of fog of war (ocult:fog) except the starting platform.
 local arena = require "ocult:arena"
+local fog_layer = require "ocult:fog"
 
 local stone = block.index("base:stone")
 local mine_stone = block.index("ocult:stone") -- minable stone of the raised layer
 local bazalt = block.index("base:bazalt")
+local fog = block.index(fog_layer.BLOCK)
+local shade = block.index(fog_layer.SHADE_BLOCK)
 
 -- ore veins: the arena is split into VEIN_CELL x VEIN_CELL cells, a cell
 -- holds at most one vein: a connected blob of 1..max blocks grown by a random
@@ -94,6 +98,8 @@ function place_structures(x, z, w, d, hmap, chunk_height)
             end
             if not arena.in_platform(bx, bz) then
                 table.insert(placements, {":block", ore_at(bx, bz) or mine_stone, {bx, arena.LEVEL, bz}})
+                table.insert(placements, {":block", fog, {bx, fog_layer.Y, bz}})
+                table.insert(placements, {":block", shade, {bx, fog_layer.SHADE_Y, bz}})
             end
         end
     end

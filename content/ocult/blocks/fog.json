@@ -1,0 +1,9 @@
+{
+    "texture": "ocult_fog",
+    "caption": "Туман",
+    "obstacle": false,
+    "selectable": false,
+    "light-passing": true,
+    "sky-light-passing": true,
+    "breakable": false
+}

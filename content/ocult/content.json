@@ -7,7 +7,9 @@
     "rubinyte_ore",
     "mana_ore",
     "iron_ore",
-    "stone"
+    "stone",
+    "fog",
+    "shade"
   ],
   "items": [],
   "entities": [

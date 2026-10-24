@@ -23,6 +23,7 @@ local rts_camera = require "ocult:rts_camera"
 local mining = require "ocult:mining"
 local drops = require "ocult:drops"
 local economy = require "ocult:economy"
+local fog = require "ocult:fog"
 
 local this = {}
 
@@ -276,12 +277,12 @@ end
 
 -- an item under the cursor: hit directly, or lying right next to the hit point
 local function item_at(hit)
-    if hit.entity and drops.get(hit.entity) then
+    if hit.entity and drops.get(hit.entity) and not fog.is_hidden(hit.endpoint[1], hit.endpoint[3]) then
         return hit.entity
     end
     local p = hit.endpoint
     local best, best_d
-    for _, d in ipairs(drops.list()) do
+    for _, d in ipairs(drops.list(function(pos) return not fog.is_hidden(pos[1], pos[3]) end)) do
         local dx, dz = d.pos[1] - p[1], d.pos[3] - p[3]
         local dist = dx * dx + dz * dz
         if dist <= ITEM_PICK_RADIUS * ITEM_PICK_RADIUS and (not best or dist < best_d) then

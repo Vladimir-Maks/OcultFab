@@ -39,4 +39,5 @@ return {
     end,
     pipes = true,
     storage = true,
+    vision = 12,
 }
