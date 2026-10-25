@@ -1,0 +1,25 @@
+<!-- Item pump settings: opened as an overlay by the pump's "Настр." button,
+     closes with Esc. Filled by pump.xml.lua -->
+<container size="400,440" color="#140c12F0"
+           position-func="gui.get_viewport()[1] / 2 - 200, gui.get_viewport()[2] / 2 - 220">
+    <label pos="12,10" size="340,22" color="#e0c8d0FF">Помпа предметов</label>
+    <button pos="364,6" size="28,28" onclick="hud.close('ocult:pump')" tooltip="Закрыть (Esc)">x</button>
+
+    <label pos="12,40" size="376,20" color="#c8a0b0FF">Ресурс (из того, что есть на складе):</label>
+    <panel id="items" pos="12,62" size="376,170" color="#0a0608FF" padding="4,4,4,4"
+           interval="2" scrollable="true" max-length="170"/>
+
+    <label pos="12,244" size="376,20" color="#c8a0b0FF">Режим:</label>
+    <button id="mode_once" pos="12,266" size="376,30" onclick="set_mode('once')"
+            tooltip="Качать, пока на складе не останется n, потом остановиться">Разово: пока на складе не останется n</button>
+    <button id="mode_keep" pos="12,300" size="376,30" onclick="set_mode('keep')"
+            tooltip="Качать, пока на складе больше n; продолжать, когда ресурса снова станет больше">Постоянно: пока на складе больше n</button>
+
+    <label pos="12,342" size="30,24" color="#c8a0b0FF">n:</label>
+    <textbox id="limit" pos="40,340" size="120,28" hint="0"
+             sub-consumer="on_limit" validator="is_count"/>
+
+    <button id="spread" pos="12,378" size="376,30" onclick="toggle_spread()"
+            tooltip="Как делить ресурс между тремя выходами"></button>
+    <label id="status" pos="12,414" size="376,20" color="#a08890FF"></label>
+</container>

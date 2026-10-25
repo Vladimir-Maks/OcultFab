@@ -3,6 +3,8 @@ local building = require "ocult:rts/building"
 local economy = require "ocult:economy"
 local logistics = require "ocult:logistics"
 local fog = require "ocult:fog"
+local machines = require "ocult:machines"
+local debug_flags = require "ocult:debug"
 
 -- once per world: the core in the middle of the arena + the first cultist
 local MARKER = "world:data/ocult/initialized"
@@ -13,15 +15,20 @@ local pending = false
 
 function on_world_open()
     economy.load()
+    machines.load()
+    debug_flags.load()
     pending = not file.exists(MARKER)
 end
 
 function on_world_save()
     economy.save()
+    machines.save()
+    debug_flags.save()
 end
 
 function on_world_tick()
     logistics.update(1 / 20)
+    machines.update(1 / 20)
     fog.update()
     if not pending then
         return

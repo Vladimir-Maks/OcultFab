@@ -24,6 +24,7 @@ local mining = require "ocult:mining"
 local drops = require "ocult:drops"
 local economy = require "ocult:economy"
 local fog = require "ocult:fog"
+local debug_flags = require "ocult:debug"
 
 local this = {}
 
@@ -84,7 +85,8 @@ local function run_command(id)
         refresh()
         return
     end
-    if cmd.cost and not economy.can_afford(cmd.cost) then
+    local free = cmd.place and debug_flags.free_build
+    if cmd.cost and not free and not economy.can_afford(cmd.cost) then
         command_panel.notify("Не хватает: " .. economy.cost_text(cmd.cost))
         return
     end

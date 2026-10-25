@@ -3,5 +3,8 @@
         "ocult_mimic_walk",
         "ocult_mimic_sitdown",
         "ocult_mimic_standup"
+    ],
+    "models": [
+        "ocult_liquid_drop"
     ]
 }

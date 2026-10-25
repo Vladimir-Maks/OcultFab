@@ -5,7 +5,11 @@
 -- storage; port modes must match on both ends:
 --   import: building "in" (or any)  <- storage "out" (or any)
 --   export: building "out" (or any) -> storage "in" (or any)
--- Items in transit are small entities moved along the route by update(),
+-- Machines (pump -> cauldron -> tank) use the same pipes with their own
+-- receivers: this.find(b, port_ok, target_ok) finds a route to the nearest
+-- building target_ok accepts, this.send() moves an item or a portion of
+-- liquid along a route.
+-- Things in transit are small entities moved along the route by update(),
 -- which scripts/world.lua calls every tick. They aren't saved: whatever is
 -- in the pipes when the world is closed is lost.
 local building = require "ocult:rts/building"
@@ -38,15 +42,19 @@ local function cell_key(x, z)
     return x .. "," .. z
 end
 
--- route between building b (handle from building.instance) and the nearest
--- storage, as a list of {x, z} cells from the storage cell to b's port cell
-local function find_route(b, modes)
+-- route between building b ({x, y, z, id} of its origin) and the nearest
+-- building target_ok(target, def, mode) accepts (target = {x, y, z, id} of
+-- its origin, mode - its port facing the pipe), starting only from b's ports
+-- port_ok(mode, index) accepts (index in the building's port list).
+-- Returns a list of {x, z} cells from the target cell to b's port cell, and
+-- the target; or nil
+local function search(b, port_ok, target_ok)
     local y = b.y
     local prev, queue = {}, {}
-    for _, p in ipairs(building.ports(b.id, b.x, b.y, b.z)) do
+    for i, p in ipairs(building.ports(b.id, b.x, b.y, b.z)) do
         local px, _, pz, dx, dz, mode = unpack(p)
         local cx, cz = px + dx, pz + dz
-        if modes.mine[mode] and pipes.is_pipe(cx, y, cz) and not prev[cell_key(cx, cz)] then
+        if port_ok(mode, i) and pipes.is_pipe(cx, y, cz) and not prev[cell_key(cx, cz)] then
             prev[cell_key(cx, cz)] = {px, pz} -- the pipe leads into our port cell
             table.insert(queue, {cx, cz})
         end
@@ -66,10 +74,11 @@ local function find_route(b, modes)
             else
                 local id = block.get(nx, y, nz)
                 local def = id > 0 and building.get_def(id)
-                if def and def.storage then
-                    local ox, _, oz = block.seek_origin(nx, y, nz)
+                if def then
+                    local ox, oy, oz = block.seek_origin(nx, y, nz)
                     local mode = building.port_mode(nx, y, nz, -d[1], -d[2])
-                    if (ox ~= b.x or oz ~= b.z) and mode and modes.storage[mode] then
+                    local target = {x = ox, y = oy, z = oz, id = id}
+                    if (ox ~= b.x or oz ~= b.z) and mode and target_ok(target, def, mode) then
                         -- walk back: pipes ... first pipe -> our port cell
                         -- (the port cell has no prev, which ends the walk)
                         local route = {{nx, nz}}
@@ -78,7 +87,7 @@ local function find_route(b, modes)
                             table.insert(route, cell)
                             cell = prev[cell_key(cell[1], cell[2])]
                         end
-                        return route
+                        return route, target
                     end
                 end
             end
@@ -87,9 +96,16 @@ local function find_route(b, modes)
     return nil
 end
 
-local function ship(name, route, y, delay, on_arrive)
+-- route to the nearest storage with matching ports (modes = IMPORT / EXPORT)
+local function find_route(b, modes)
+    return (search(b, function(mode) return modes.mine[mode] end,
+        function(target, def, mode) return def.storage and modes.storage[mode] end))
+end
+
+-- payload: {item = name} or {liquid = id}
+local function ship(payload, route, y, delay, on_arrive)
     table.insert(shipments, {
-        item = name, route = route, y = y, delay = delay,
+        payload = payload, route = route, y = y, delay = delay,
         progress = 0, on_arrive = on_arrive,
     })
 end
@@ -130,7 +146,7 @@ function this.import(b, cost, on_done)
     local job = {total = #items, arrived = 0}
     jobs[key(b)] = job
     for i, name in ipairs(items) do
-        ship(name, route, b.y, (i - 1) * INTERVAL, function()
+        ship({item = name}, route, b.y, (i - 1) * INTERVAL, function()
             job.arrived = job.arrived + 1
             if job.arrived == job.total then
                 jobs[key(b)] = nil
@@ -151,7 +167,7 @@ function this.export(b, name, count)
     route = reversed(route)
     local last = route[#route]
     for i = 1, count do
-        ship(name, route, b.y, (i - 1) * INTERVAL, function()
+        ship({item = name}, route, b.y, (i - 1) * INTERVAL, function()
             if economy.add(name, 1) == 0 then
                 -- storage is full: the item falls out next to it
                 drops.spawn(item.index(name), 1, {last[1] + 0.5, b.y + 0.3, last[2] + 0.5})
@@ -159,6 +175,35 @@ function this.export(b, name, count)
         end)
     end
     return true
+end
+
+-- port mode filters for this.find: b takes in / gives out through the port
+this.PORT_IN = function(mode) return IMPORT.mine[mode] == true end
+this.PORT_OUT = function(mode) return EXPORT.mine[mode] == true end
+-- the target's port mode accepts / gives out
+this.TARGET_IN = function(mode) return EXPORT.storage[mode] == true end
+
+-- route from the nearest storage to b ("in" ports of both), or nil
+function this.storage_route(b)
+    return find_route(b, IMPORT)
+end
+
+-- route from b to the nearest building target_ok(target, def, mode) accepts,
+-- leaving through ports port_ok(mode, index) accepts: list of {x, z} cells
+-- from b's port cell to the target cell, and the target {x, y, z, id};
+-- or nil
+function this.find(b, port_ok, target_ok)
+    local route, target = search(b, port_ok, target_ok)
+    if not route then
+        return nil
+    end
+    return reversed(route), target
+end
+
+-- moves payload ({item = name} or {liquid = id}) along route (a list of
+-- {x, z} cells) on layer y; on_arrive() at the end
+function this.send(payload, route, y, on_arrive)
+    ship(payload, route, y, 0, on_arrive)
 end
 
 -- {total, arrived} of the import job running for b, or nil
@@ -189,7 +234,7 @@ function this.update(dt)
         else
             if not s.uid then
                 local pos = point_at(s.route, s.y, 0)
-                s.uid = entities.spawn(ENTITY, pos, {ocult__pipe_item = {item = s.item}}):get_uid()
+                s.uid = entities.spawn(ENTITY, pos, {ocult__pipe_item = s.payload}):get_uid()
             end
             s.progress = s.progress + SPEED * dt
             local e = entities.get(s.uid)

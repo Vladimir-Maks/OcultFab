@@ -1,0 +1,23 @@
+[
+    {
+        "id": "lava",
+        "caption": "Лава",
+        "color": [255, 120, 20],
+        "source": "ocult:stone.item",
+        "time": 10
+    },
+    {
+        "id": "mana",
+        "caption": "Жидкая мана",
+        "color": [40, 90, 255],
+        "source": "ocult:mana_ore.item",
+        "time": 4
+    },
+    {
+        "id": "rubinyte",
+        "caption": "Жидкий рубинит",
+        "color": [220, 20, 40],
+        "source": "ocult:rubinyte_ore.item",
+        "time": 20
+    }
+]

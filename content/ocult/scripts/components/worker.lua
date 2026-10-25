@@ -9,6 +9,7 @@ local drops = require "ocult:drops"
 local economy = require "ocult:economy"
 local core_site = require "ocult:rts/core_site"
 local fog = require "ocult:fog"
+local debug_flags = require "ocult:debug"
 
 local GATHER_RADIUS = 15 -- RMB on an item: gather within this many blocks of it
 local MIMIC = "ocult:mimic"
@@ -21,6 +22,10 @@ local EXTRACTOR_COST = {
     ["ocult:iron_ore.item"] = 10,
     ["ocult:mana_ore.item"] = 1,
 }
+-- placeholder prices
+local PUMP_COST = {["ocult:stone.item"] = 10, ["ocult:iron_ore.item"] = 5}
+local CAULDRON_COST = {["ocult:stone.item"] = 20, ["ocult:iron_ore.item"] = 5}
+local TANK_COST = {["ocult:stone.item"] = 15, ["ocult:iron_ore.item"] = 10}
 
 unit.extend(this, {
     title = "Прихвостень",
@@ -39,6 +44,15 @@ unit.extend(this, {
         {id = "altar", label = "Алтарь", menu = "build", slot = 2,
          hint = "Принести себя в жертву и стать алтарем", place = "ocult:altar",
          cost = ALTAR_COST},
+        {id = "pump", label = "Помпа", menu = "build", slot = 3,
+         hint = "Построить помпу предметов: подаёт ресурс со склада",
+         place = "ocult:pump", cost = PUMP_COST, show_ports = true},
+        {id = "cauldron", label = "Тигель", menu = "build", slot = 4,
+         hint = "Построить тигель: плавит ресурсы в жидкость",
+         place = "ocult:cauldron", cost = CAULDRON_COST, show_ports = true},
+        {id = "tank", label = "Цист.", menu = "build", slot = 5,
+         hint = "Построить цистерну для жидкости", place = "ocult:tank",
+         cost = TANK_COST, show_ports = true},
     },
 })
 
@@ -280,6 +294,9 @@ end
 
 -- pays, walks to `stand`, places the building; refunds if it can't
 local function build(block_name, origin, cost, stand, sacrifice)
+    if debug_flags.free_build then
+        cost = {} -- nothing to pay, nothing to refund
+    end
     if not economy.spend(cost) then
         return "Не хватает: " .. economy.cost_text(cost)
     end
@@ -305,13 +322,29 @@ function command_altar(origin)
 end
 
 -- builds from the edge of the spot, so it isn't walled in
-function command_extractor(origin)
-    local sx, _, sz = block.get_size(block.index("ocult:extractor"))
+local function build_from_edge(block_name, origin, cost)
+    local sx, _, sz = block.get_size(block.index(block_name))
     local stand = building.ring_cell(origin, sx, sz, get_pos())
     if not stand then
         return "Не подойти к месту стройки"
     end
-    return build("ocult:extractor", origin, EXTRACTOR_COST, stand, false)
+    return build(block_name, origin, cost, stand, false)
+end
+
+function command_extractor(origin)
+    return build_from_edge("ocult:extractor", origin, EXTRACTOR_COST)
+end
+
+function command_pump(origin)
+    return build_from_edge("ocult:pump", origin, PUMP_COST)
+end
+
+function command_cauldron(origin)
+    return build_from_edge("ocult:cauldron", origin, CAULDRON_COST)
+end
+
+function command_tank(origin)
+    return build_from_edge("ocult:tank", origin, TANK_COST)
 end
 
 local base_on_render = on_render

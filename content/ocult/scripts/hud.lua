@@ -3,6 +3,10 @@ local hud_cleanup = require "ocult:hud_cleanup"
 local selection = require "ocult:rts/selection"
 local core_site = require "ocult:rts/core_site"
 local arena = require "ocult:arena"
+local fog = require "ocult:fog"
+
+local DEBUG_LAYOUT = "ocult:debug"
+local debug_open = false
 
 -- Space: camera to the selection (average point), or to the core when
 -- nothing is selected (the world centre if there is no core). Held down,
@@ -32,6 +36,15 @@ function on_hud_open(playerid)
     hud_cleanup.init()
     rts_camera.init(playerid)
     selection.init(rts_camera.get_camera(), playerid)
+    -- F6: debug panel, like the engine's F3
+    input.add_callback("key:f6", function()
+        debug_open = not debug_open
+        if debug_open then
+            hud.open_permanent(DEBUG_LAYOUT)
+        else
+            hud.close(DEBUG_LAYOUT)
+        end
+    end)
 end
 
 function on_hud_render()
@@ -41,6 +54,8 @@ function on_hud_render()
         center_camera()
     end
     rts_camera.update(time.delta())
+    local focus = rts_camera.get_focus()
+    fog.debug_update(focus[1], focus[3])
     if not hud.is_paused() then
         selection.update()
     end
