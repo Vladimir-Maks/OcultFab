@@ -1,0 +1,15 @@
+{
+    "components": [
+        "ocult:mimic"
+    ],
+    "hitbox": [
+        1.0,
+        1.125,
+        0.9
+    ],
+    "blocking": false,
+    "step-height": 0,
+    "skeleton-name": "ocult:mimic",
+    "solid": true,
+    "mass": 40.0
+}

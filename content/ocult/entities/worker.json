@@ -8,6 +8,7 @@
         0.6
     ],
     "blocking": false,
+    "step-height": 0,
     "skeleton-name": "ocult:worker",
     "solid": true,
     "mass": 10.0

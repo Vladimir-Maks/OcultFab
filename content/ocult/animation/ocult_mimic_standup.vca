@@ -1,0 +1,41 @@
+@configure fps 24 rotation-order ZYX
+@move bone chest by y curve bezier {
+    @key frame 0 value -0.5 lx 0 ly 0 rx 0.66664 ry 0.01042
+    @key frame 1.99992 value -0.4375 lx -0.66664 ly 0 rx 1.33336 ry 0
+    @key frame 6 value -0.5 lx -1.33336 ly -0.07292 rx 2 ry 0.07292
+    @key frame 12 value 0 lx -2 ly -0.08333 rx 0 ry 0
+}
+@move bone back_leg by y curve bezier {
+    @key frame 0 value -0.5 lx 0 ly 0 rx 0.66664 ry 0.01042
+    @key frame 1.99992 value -0.4375 lx -0.66664 ly 0 rx 1.33336 ry 0
+    @key frame 6 value -0.5 lx -1.33336 ly -0.07292 rx 2 ry 0.07292
+    @key frame 12 value 0 lx -2 ly -0.08333 rx 0 ry 0
+}
+@rotate bone back_leg by x curve bezier {
+    @key frame 0 value -52.5 lx 0 ly 0 rx 4 ry 17.5
+    @key frame 12 value 0 lx -4 ly -17.5 rx 0 ry 0
+}
+@rotate bone upper_chest by x curve bezier {
+    @key frame 0 value 36.5 lx 0 ly 0 rx 1 ry -0.5
+    @key frame 3 value 33.5 lx -1 ly -0.83333 rx 2.33336 ry 0.83333
+    @key frame 10.00008 value 41.5 lx -2.33336 ly 5.58333 rx 2.66664 ry -5.58333
+    @key frame 18 value 0 lx -2.66664 ly 6.91667 rx 0 ry 0
+}
+@rotate bone group by x curve bezier {
+    @key frame 0 value 117.5 lx 0 ly 0 rx 4 ry -39.16667
+    @key frame 12 value 0 lx -4 ly 39.16667 rx 0 ry 0
+}
+@move bone back_leg2 by y curve bezier {
+    @key frame 0 value -0.5 lx 0 ly 0 rx 0.66664 ry 0.01042
+    @key frame 1.99992 value -0.4375 lx -0.66664 ly 0 rx 1.33336 ry 0
+    @key frame 6 value -0.5 lx -1.33336 ly -0.07292 rx 2 ry 0.07292
+    @key frame 12 value 0 lx -2 ly -0.08333 rx 0 ry 0
+}
+@rotate bone back_leg2 by x curve bezier {
+    @key frame 0 value -52.5 lx 0 ly 0 rx 4 ry 17.5
+    @key frame 12 value 0 lx -4 ly -17.5 rx 0 ry 0
+}
+@rotate bone group2 by x curve bezier {
+    @key frame 0 value 117.5 lx 0 ly 0 rx 4 ry -39.16667
+    @key frame 12 value 0 lx -4 ly 39.16667 rx 0 ry 0
+}

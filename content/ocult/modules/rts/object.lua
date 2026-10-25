@@ -17,6 +17,8 @@
 --                 command_<id>(...). With `place = "pack:block"` the player first
 --                 picks a spot for that building; the handler gets its origin.
 --                 `show_ports = true` shows building pipe ports in that mode.
+--                 May be a function(self) -> list for commands that depend on
+--                 the state (the panel re-reads it after every command).
 
 local object = {}
 
@@ -36,7 +38,12 @@ function object.extend(target, def, highlight)
         return def.description or ""
     end
     function target.get_preview() return def.preview end
-    function target.get_commands() return def.commands or {} end
+    function target.get_commands()
+        if type(def.commands) == "function" then
+            return def.commands(target)
+        end
+        return def.commands or {}
+    end
 
     function target.find_command(id)
         for _, cmd in ipairs(target.get_commands()) do

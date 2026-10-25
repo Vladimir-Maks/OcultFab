@@ -23,7 +23,7 @@ end
 local function refresh()
     local list = economy.items()
     document.capacity.text = string.format("Занято %d из %d, свободно %d",
-        economy.total(), economy.CAPACITY, economy.free())
+        economy.total(), economy.capacity(), economy.free())
     local sig = signature(list)
     if sig == shown then
         return

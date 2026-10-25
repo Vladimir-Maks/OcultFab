@@ -1,5 +1,5 @@
 -- Cultist: basic worker unit. Carries resources lying on the ground to the
--- core, one item per trip, and builds: "Стройка" opens the build menu
+-- core or to the nearest sitting mimic, one item per trip, and builds: "Стройка" opens the build menu
 -- (extractor; altar - the cultist sacrifices itself to become one).
 -- RMB on an item (or right next to it) = gather around it.
 local unit = require "ocult:rts/unit"
@@ -11,6 +11,8 @@ local core_site = require "ocult:rts/core_site"
 local fog = require "ocult:fog"
 
 local GATHER_RADIUS = 15 -- RMB on an item: gather within this many blocks of it
+local MIMIC = "ocult:mimic"
+local MIMIC_REACH = 2.5  -- hands an item to a mimic from this close
 
 -- costs in items stored in the core
 local ALTAR_COST = {["ocult:stone.item"] = 25, ["ocult:mana_ore.item"] = 1}
@@ -101,8 +103,55 @@ local function next_drop()
     end)
 end
 
-local function deliver()
-    local cell = core_site.access_cell(get_pos())
+-- a sitting mimic that takes items, or nil
+local function receiving_mimic(mimic_uid)
+    local e = entities.get(mimic_uid)
+    if not e or e:def_name() ~= MIMIC then
+        return nil
+    end
+    local comp = unit.get(mimic_uid)
+    return comp and comp.accepts_items() and e or nil
+end
+
+local function cell_of(pos)
+    return {math.floor(pos[1]), arena.LEVEL, math.floor(pos[3])}
+end
+
+-- the nearest place to hand the item in: a sitting mimic with free space
+-- or the core. Returns the cell to walk to and the mimic uid (nil = core)
+local function drop_off()
+    local pos = get_pos()
+    local function dist(cell)
+        return vec2.distance({pos[1], pos[3]}, {cell[1] + 0.5, cell[3] + 0.5})
+    end
+    local best = core_site.access_cell(pos)
+    local best_d = best and dist(best)
+    local best_uid
+    for mimic_uid in pairs(entities.get_all()) do
+        local e = receiving_mimic(mimic_uid)
+        if e then
+            local cell = cell_of(e.transform:get_pos())
+            local d = dist(cell)
+            if not best_d or d < best_d then
+                best, best_d, best_uid = cell, d, mimic_uid
+            end
+        end
+    end
+    return best, best_uid
+end
+
+-- to: nil - the nearest drop-off, "core", or a mimic uid
+local function deliver(to)
+    local cell, mimic_uid
+    if to == "core" then
+        cell = core_site.access_cell(get_pos())
+    elseif to then
+        mimic_uid = to
+        local e = receiving_mimic(mimic_uid)
+        cell = e and cell_of(e.transform:get_pos())
+    else
+        cell, mimic_uid = drop_off()
+    end
     if not cell then
         stop_gathering()
         return
@@ -110,7 +159,16 @@ local function deliver()
     busy = true
     move_to(cell, function()
         busy = false
-        if economy.add(carried, 1) == 1 then
+        if mimic_uid then
+            -- it may have stood up or filled up meanwhile: then the next
+            -- think() picks another drop-off
+            local e = receiving_mimic(mimic_uid)
+            if e and vec3.distance(e.transform:get_pos(), get_pos()) < MIMIC_REACH
+                    and economy.add_to_mimic(mimic_uid, carried, 1) == 1 then
+                carried = nil
+                show_carried()
+            end
+        elseif economy.add(carried, 1) == 1 then
             carried = nil
             show_carried()
         else
@@ -187,12 +245,14 @@ function on_order(pos, target_uid, target_block)
         command_gather(zone_around(entities.get(target_uid).transform:get_pos()))
         return
     end
-    -- RMB on the core with an item in hands: hand it in, then keep gathering
-    if carried and target_block
-            and block.name(block.get(unpack(target_block))) == core_site.BLOCK then
+    -- RMB on the core or a sitting mimic with an item in hands: hand it in,
+    -- then keep gathering
+    local mimic = carried and target_uid and receiving_mimic(target_uid)
+    if mimic or (carried and target_block
+            and block.name(block.get(unpack(target_block))) == core_site.BLOCK) then
         stop()
         zone = last_zone or zone_around(get_pos())
-        deliver()
+        deliver(mimic and target_uid or "core")
         return
     end
     base_on_order(pos, target_uid)

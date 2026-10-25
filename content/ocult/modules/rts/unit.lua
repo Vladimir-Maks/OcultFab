@@ -10,6 +10,10 @@
 -- makes no progress re-paths; one whose target cell is taken by another unit
 -- stops next to it.
 --
+-- Units live on the floor (arena.LEVEL): their height is fixed every physics
+-- step, and the entity needs "step-height": 0 so the engine doesn't lift it
+-- onto low blocks (pipes, the altar).
+--
 -- Traffic rules for units meeting on the way: a unit ahead in our lane makes
 -- us steer aside (head-on: both keep right and pass); of two units meeting
 -- head-on the one with the lower traffic_priority() (ties: higher uid)
@@ -20,6 +24,8 @@
 --   accel - acceleration and braking, blocks/s^2
 
 local object = require "ocult:rts/object"
+local building = require "ocult:rts/building"
+local arena = require "ocult:arena"
 
 local unit = {}
 
@@ -39,6 +45,7 @@ local STUCK_CHECK = 1.0        -- seconds between progress checks
 local STUCK_PROGRESS = 0.25    -- blocks of progress expected per check
 local STUCK_GIVE_UP = 3        -- failed checks in a row before giving up
 local TURN_SMOOTHING = 10 -- higher = faster turning
+local UNSTUCK_RADIUS = 3  -- blocks searched for a free cell when inside a block
 
 -- main component of a unit entity, or nil
 function unit.get(uid)
@@ -111,7 +118,39 @@ function unit.extend(env, def)
 
     -- pos - block position to stand on; callback (optional) fires on arrival,
     -- fail (optional) when there is no path
+    -- units never leave the floor: the hitbox centre stays at this height
+    -- (no climbing onto low buildings or onto each other, no falling)
+    local height = arena.LEVEL + body:get_size()[2] / 2
+
+    local function keep_height()
+        local p = tsf:get_pos()
+        if math.abs(p[2] - height) > 1e-3 then
+            tsf:set_pos({p[1], height, p[3]})
+        end
+        local vel = body:get_vel()
+        if vel[2] ~= 0 then
+            body:set_vel({vel[1], 0, vel[3]})
+        end
+    end
+
+    -- stuck in or on top of a block (a building placed on the unit, pushed
+    -- onto raised stone): step down to the nearest free floor cell, or the
+    -- route search can't even start. Units only walk at arena.LEVEL, so the
+    -- cell is checked there (not by the current height: a unit bouncing on a
+    -- pipe would look like it is in the air)
+    local function leave_block()
+        local p = tsf:get_pos()
+        if building.is_walkable(math.floor(p[1]), arena.LEVEL, math.floor(p[3])) then
+            return
+        end
+        local cell = building.free_cell_near(p, arena.LEVEL, UNSTUCK_RADIUS)
+        if cell then
+            tsf:set_pos({cell[1] + 0.5, height, cell[3] + 0.5})
+        end
+    end
+
     function env.move_to(pos, callback, fail)
+        leave_block()
         target = {pos[1], pos[2], pos[3]}
         on_arrive = callback
         on_fail = fail
@@ -135,6 +174,11 @@ function unit.extend(env, def)
             return {dir_x, dir_z}
         end
         return nil
+    end
+
+    -- current speed as a fraction of the max speed (0..1)
+    function env.get_speed_fraction()
+        return target and speed / max_speed or 0
     end
 
     -- who goes first when two units meet head-on (higher wins);
@@ -218,7 +262,7 @@ function unit.extend(env, def)
                     local k = (1 - d / SEPARATION_RADIUS) / d
                     sx, sz = sx + dx * k, sz + dz * k
                 end
-                if spot and vec2.distance(flat(opos), spot) < 0.6 then
+                if spot and vec2.distance(flat(opos), spot) < 0.75 then -- anywhere in the cell
                     target_taken = true
                 end
             end
@@ -226,7 +270,22 @@ function unit.extend(env, def)
         return sx * SEPARATION_SPEED, sz * SEPARATION_SPEED, target_taken
     end
 
+    -- anchored: stands still and isn't pushed aside (a sitting mimic);
+    -- move orders have to be refused by the unit itself
+    local anchored = false
+    function env.set_anchored(flag)
+        anchored = flag
+        if flag then
+            env.stop()
+        end
+    end
+
     function env.on_physics_update(delta)
+        keep_height()
+        if anchored then
+            halt()
+            return
+        end
         if not target then
             -- idle: only step aside when someone is too close
             local sx, sz = separation(tsf:get_pos())

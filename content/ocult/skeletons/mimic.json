@@ -1,0 +1,66 @@
+{
+    "root": {
+        "nodes": [
+            {
+                "name": "back_leg",
+                "offset": [
+                    0.375,
+                    -0.015625,
+                    0.0
+                ],
+                "model": "ocult_mimic_back_leg",
+                "nodes": [
+                    {
+                        "name": "group",
+                        "offset": [
+                            0.0,
+                            -0.25,
+                            0.109375
+                        ],
+                        "model": "ocult_mimic_group"
+                    }
+                ]
+            },
+            {
+                "name": "back_leg2",
+                "offset": [
+                    -0.375,
+                    -0.015625,
+                    0.0
+                ],
+                "model": "ocult_mimic_back_leg2",
+                "nodes": [
+                    {
+                        "name": "group2",
+                        "offset": [
+                            0.0,
+                            -0.25,
+                            0.109375
+                        ],
+                        "model": "ocult_mimic_group2"
+                    }
+                ]
+            },
+            {
+                "name": "chest",
+                "offset": [
+                    0.0,
+                    0.0625,
+                    0.0
+                ],
+                "model": "ocult_mimic_chest",
+                "nodes": [
+                    {
+                        "name": "upper_chest",
+                        "offset": [
+                            0.0,
+                            0.25,
+                            0.375
+                        ],
+                        "model": "ocult_mimic_upper_chest"
+                    }
+                ]
+            }
+        ]
+    }
+}

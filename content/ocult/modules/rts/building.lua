@@ -80,18 +80,40 @@ end
 -- the free floor cell around a sx x sz footprint at origin nearest to
 -- `from` (pipes count as free: units walk over them), or nil
 function building.ring_cell(origin, sx, sz, from)
-    local pipe = block.index("ocult:pipe")
     local best, best_d
     for x = origin[1] - 1, origin[1] + sx do
         for z = origin[3] - 1, origin[3] + sz do
             local ring = x < origin[1] or x >= origin[1] + sx
                 or z < origin[3] or z >= origin[3] + sz
-            local id = block.get(x, origin[2], z)
-            if ring and (id == 0 or id == pipe) and block.is_solid_at(x, origin[2] - 1, z) then
+            if ring and building.is_walkable(x, origin[2], z) then
                 local dx, dz = x + 0.5 - from[1], z + 0.5 - from[3]
                 local d = dx * dx + dz * dz
                 if not best or d < best_d then
                     best, best_d = {x, origin[2], z}, d
+                end
+            end
+        end
+    end
+    return best
+end
+
+-- a unit can stand in this cell: nothing (or a pipe) there, solid ground below
+function building.is_walkable(x, y, z)
+    local id = block.get(x, y, z)
+    return (id == 0 or id == block.index("ocult:pipe")) and block.is_solid_at(x, y - 1, z)
+end
+
+-- the walkable cell at height y nearest to pos within radius blocks, or nil
+function building.free_cell_near(pos, y, radius)
+    local px, pz = math.floor(pos[1]), math.floor(pos[3])
+    local best, best_d
+    for x = px - radius, px + radius do
+        for z = pz - radius, pz + radius do
+            if building.is_walkable(x, y, z) then
+                local dx, dz = x + 0.5 - pos[1], z + 0.5 - pos[3]
+                local d = dx * dx + dz * dz
+                if not best or d < best_d then
+                    best, best_d = {x, y, z}, d
                 end
             end
         end
@@ -141,10 +163,33 @@ function building.can_place(block_name, origin)
     return true
 end
 
+-- moves entities standing on (or overlapping) the footprint out to the ring
+-- around it; otherwise the block hitbox lifts them onto the building, where
+-- they can't find a path anymore
+local EJECT_MARGIN = 0.5 -- about half a unit's width
+local NOT_EJECTED = {["base:player"] = true, ["ocult:pipe_item"] = true}
+local function eject_entities(origin, sx, sz)
+    local center = {origin[1] + sx / 2, origin[2], origin[3] + sz / 2}
+    for _, uid in ipairs(entities.get_all_in_radius(center, math.max(sx, sz) + 1)) do
+        local e = entities.get(uid)
+        if e and not NOT_EJECTED[e:def_name()] then
+            local p = e.transform:get_pos()
+            if p[1] > origin[1] - EJECT_MARGIN and p[1] < origin[1] + sx + EJECT_MARGIN
+                    and p[3] > origin[3] - EJECT_MARGIN and p[3] < origin[3] + sz + EJECT_MARGIN then
+                local cell = building.ring_cell(origin, sx, sz, p)
+                if cell then
+                    e.transform:set_pos({cell[1] + 0.5, p[2], cell[3] + 0.5})
+                end
+            end
+        end
+    end
+end
+
 function building.place(block_name, origin)
     local id = block.index(block_name)
     block.place(origin[1], origin[2], origin[3], id, 0)
     local sx, _, sz = size_of(block_name)
+    eject_entities(origin, sx, sz)
     local def = building.get_def(id)
     fog.reveal(origin[1] + sx / 2, origin[3] + sz / 2,
         def and def.vision or fog.BUILDING_VISION)

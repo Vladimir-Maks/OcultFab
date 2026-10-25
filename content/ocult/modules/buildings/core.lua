@@ -5,13 +5,19 @@
 local economy = require "ocult:economy"
 local workers = require "ocult:workers"
 
+-- in front of the south side
+local function exit_pos(self)
+    local sx, _, sz = block.get_size(self.id)
+    return {self.x + sx / 2, self.y + 0.5, self.z + sz + 0.5}
+end
+
 return {
     title = "Ядро",
     -- a function: the panel re-reads it every frame
     description = function(self)
         return string.format("Ядро проводящее через себя магию.\nПахнет виноградом...\n\n"
             .. "Склад: %d/%d, свободно %d",
-            economy.total(), economy.CAPACITY, economy.free())
+            economy.total(), economy.capacity(), economy.free())
     end,
     preview = {model = "ocult_core", center = {1.5, 0.8, 1.5}},
     commands = {
@@ -32,10 +38,8 @@ return {
         if not economy.spend(workers.COST) then
             return "Не хватает: " .. economy.cost_text(workers.COST)
         end
-        -- in front of the south side
-        local sx, _, sz = block.get_size(self.id)
         workers.reserve()
-        workers.spawn_reserved({self.x + sx / 2, self.y + 0.5, self.z + sz + 0.5})
+        workers.spawn_reserved(exit_pos(self))
     end,
     pipes = true,
     storage = true,
