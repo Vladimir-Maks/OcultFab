@@ -1,8 +1,11 @@
--- Mimic: a walking chest, extra storage away from the core.
+-- Mimic: a walking chest, a buffer away from the core.
 -- "Приём" makes it sit down: then it can't move or turn, and workers hand
--- their items to it as to the core. "Встать" gets it back on its feet.
--- Holds up to economy.MIMIC_CAPACITY items itself and raises the common
--- storage limit by economy.MIMIC_BONUS (see ocult:economy).
+-- their items to it instead of walking to the core. "Встать" gets it back
+-- on its feet. It holds up to economy.MIMIC_CAPACITY items; they don't count
+-- as stored until it brings them to the core: once full (or on "Отнести")
+-- it gets up, walks to the core, unloads (waiting there while the core is
+-- full), walks back to where it sat and sits down again. Every mimic also
+-- raises the core's capacity by economy.MIMIC_BONUS (see ocult:economy).
 --
 -- Animations (animation/ocult_mimic_*.vca, exported by tools/bbmodel2rig.py):
 -- walk while moving (played faster the faster it goes), sitdown (holds the
@@ -10,6 +13,7 @@
 -- eases back to rest instead of snapping.
 local unit = require "ocult:rts/unit"
 local economy = require "ocult:economy"
+local core_site = require "ocult:rts/core_site"
 
 local ANIM_WALK = "ocult_mimic_walk"
 local ANIM_SIT = "ocult_mimic_sitdown"
@@ -19,6 +23,7 @@ local WALK_RATE = 1.6   -- walk animation playback speed at full speed
 local IDLE_DELAY = 0.15 -- seconds standing before the walk animation stops
 local BLEND_TIME = 0.25 -- seconds to ease back to the rest pose
 local BONES = {"chest", "upper_chest", "back_leg", "back_leg2", "group", "group2"}
+local UNLOAD_RETRY = 2  -- seconds between unloading attempts at a full core
 
 local uid = entity:get_uid()
 local rig = entity.skeleton
@@ -30,6 +35,11 @@ local track          -- the playing animation
 local track_name
 local blend          -- {from = {bone index -> pose matrix}, t = seconds}
 local idle_time = 0
+-- delivery trip: nil, "standing" (getting up), "to_core", "unloading",
+-- "home" (walking back to sit down at `home`)
+local trip
+local home = SAVED_DATA.home -- {x, y, z} cell it sat on
+local unload_timer = 0
 
 local bones = {}
 for _, name in ipairs(BONES) do
@@ -64,12 +74,24 @@ end
 unit.extend(this, {
     title = "Мимик",
     description = function(self)
-        local state = sitting and "Принимает предметы, не двигается."
-            or "Прикажите ему сесть, чтобы прихвостни несли добычу к нему."
-        return string.format("Сундук на ножках. Хранит до %d предметов, "
-            .. "общий склад больше на %d.\n%s\n\nВнутри: %d/%d",
+        local state
+        if trip == "unloading" then
+            state = "Ждёт у ядра: склад полон."
+        elseif trip then
+            state = "Несёт добычу в ядро."
+        elseif sitting then
+            state = "Принимает предметы, не двигается."
+        else
+            state = "Прикажите ему сесть, чтобы прихвостни несли добычу к нему."
+        end
+        local text = string.format("Сундук на ножках. Копит до %d предметов и "
+            .. "сам относит их в ядро; склад ядра больше на %d.\n%s\n\nВнутри: %d/%d",
             economy.MIMIC_CAPACITY, economy.MIMIC_BONUS, state,
             economy.mimic_total(uid), economy.MIMIC_CAPACITY)
+        for _, entry in ipairs(economy.mimic_items(uid)) do
+            text = text .. string.format("\n%s ×%d", entry.caption, entry.count)
+        end
+        return text
     end,
     preview = {model = "ocult_mimic_full", center = {0, 0, 0}},
     speed = 2.5,
@@ -78,6 +100,8 @@ unit.extend(this, {
             return {
                 {id = "stand", label = "Встать", slot = 1,
                  hint = "Встать и снова ходить"},
+                {id = "deliver", label = "Отнести", slot = 2,
+                 hint = "Отнести содержимое в ядро и вернуться"},
             }
         end
         return {
@@ -91,6 +115,7 @@ unit.extend(this, {
 function on_save()
     SAVED_DATA.stock = stock
     SAVED_DATA.sitting = sitting
+    SAVED_DATA.home = home
 end
 
 -- workers may hand items in
@@ -98,24 +123,100 @@ function accepts_items()
     return sitting and economy.mimic_free(uid) > 0
 end
 
-function command_sit()
+local function cell_of(pos)
+    return {math.floor(pos[1]), math.floor(pos[2]), math.floor(pos[3])}
+end
+
+local function sit_down()
     sitting = true
     standing_up = 0
+    home = cell_of(get_pos())
     set_anchored(true)
     play(ANIM_SIT)
 end
 
-function command_stand()
+local function get_up()
     sitting = false
     standing_up = STAND_TIME
     play(ANIM_STAND)
 end
 
+function command_sit()
+    trip = nil
+    sit_down()
+end
+
+function command_stand()
+    trip = nil
+    get_up()
+end
+
 function command_stop()
+    trip = nil
     stop()
 end
 
+local function go_home()
+    trip = "home"
+    if not home then
+        trip = nil
+        return
+    end
+    move_to(home, function()
+        trip = nil
+        sit_down()
+    end, function()
+        trip = nil -- can't get back: stays standing
+    end)
+end
+
+local function try_unload()
+    if economy.unload_mimic(uid) == 0 then
+        go_home()
+    else
+        trip = "unloading"
+        unload_timer = UNLOAD_RETRY
+    end
+end
+
+local function go_to_core()
+    local cell = core_site.access_cell(get_pos())
+    if not cell then
+        trip = nil
+        return
+    end
+    trip = "to_core"
+    move_to(cell, try_unload, function()
+        trip = nil -- no way to the core
+    end)
+end
+
+-- the sitting mimic gets up and carries everything to the core
+local function start_trip()
+    if trip or economy.mimic_total(uid) == 0 then
+        return
+    end
+    trip = "standing"
+    get_up()
+end
+
+function command_deliver()
+    start_trip()
+end
+
+function on_update(tps)
+    if sitting and economy.mimic_free(uid) == 0 then
+        start_trip()
+    elseif trip == "unloading" then
+        unload_timer = unload_timer - 1 / tps
+        if unload_timer <= 0 then
+            try_unload()
+        end
+    end
+end
+
 if sitting then
+    home = home or cell_of(get_pos())
     set_anchored(true)
     -- loaded sitting: straight to the last frame
     play(ANIM_SIT).__timer = 100
@@ -126,6 +227,7 @@ function on_order(pos, target_uid, target_block)
     if sitting or standing_up > 0 then
         return
     end
+    trip = nil -- the player's order cancels a delivery trip
     base_on_order(pos, target_uid)
 end
 
@@ -139,6 +241,9 @@ function on_render(delta)
         if standing_up <= 0 then
             set_anchored(false)
             play(nil)
+            if trip == "standing" then
+                go_to_core()
+            end
         end
     elseif not sitting then
         if get_move_dir() then

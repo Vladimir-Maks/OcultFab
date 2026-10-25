@@ -3,11 +3,11 @@
 -- the player come from the items themselves. Shared by all scripts, saved
 -- with the world (scripts/world.lua calls load/save).
 --
--- Items lie in the core and in mimics (ocult:mimic, each one registers its
--- own stock table here). The limit is common: CAPACITY plus
--- MIMIC_BONUS per mimic, for the core and all mimics together; a mimic also
--- holds at most MIMIC_CAPACITY itself. Everything else (get, spend, items...)
--- sees the core and the mimics as one storage.
+-- The storage is the core: CAPACITY plus MIMIC_BONUS per mimic.
+-- Mimics (ocult:mimic) are buffers: each registers its own stock table here
+-- and holds up to MIMIC_CAPACITY items, which don't count as stored until
+-- the mimic carries them to the core (unload_mimic). get / spend / items
+-- see only the core.
 local this = {}
 
 this.CAPACITY = 100        -- the core alone
@@ -60,19 +60,11 @@ function this.capacity()
 end
 
 function this.get(name)
-    local n = stock[name] or 0
-    for _, s in pairs(live_mimics()) do
-        n = n + (s[name] or 0)
-    end
-    return n
+    return stock[name] or 0
 end
 
 function this.total()
-    local n = sum(stock)
-    for _, s in pairs(live_mimics()) do
-        n = n + sum(s)
-    end
-    return n
+    return sum(stock)
 end
 
 function this.free()
@@ -97,12 +89,12 @@ function this.mimic_total(uid)
     return mimics[uid] and sum(mimics[uid]) or 0
 end
 
--- how many more items the mimic can take right now
+-- how many more items the mimic can take
 function this.mimic_free(uid)
     if not mimics[uid] then
         return 0
     end
-    return math.max(0, math.min(this.free(), this.MIMIC_CAPACITY - sum(mimics[uid])))
+    return math.max(0, this.MIMIC_CAPACITY - sum(mimics[uid]))
 end
 
 -- adds as much as fits into the mimic; returns how many were taken
@@ -113,6 +105,30 @@ function this.add_to_mimic(uid, name, count)
         s[name] = (s[name] or 0) + taken
     end
     return taken
+end
+
+-- moves the mimic's items into the core, as many as fit;
+-- returns how many are left in the mimic
+function this.unload_mimic(uid)
+    local s = mimics[uid]
+    if not s then
+        return 0
+    end
+    for name, n in pairs(s) do
+        local taken = this.add(name, n)
+        s[name] = n - taken > 0 and n - taken or nil
+    end
+    return sum(s)
+end
+
+-- the mimic's items: list of {name, caption, count}
+function this.mimic_items(uid)
+    local list = {}
+    for name, n in pairs(mimics[uid] or {}) do
+        table.insert(list, {name = name, caption = this.caption(name), count = n})
+    end
+    table.sort(list, function(a, b) return a.caption < b.caption end)
+    return list
 end
 
 -- cost: {["ocult:stone.item"] = 10, ...}
@@ -137,19 +153,12 @@ local function take(s, name, n)
     return n - taken
 end
 
--- from the core first, then from the mimics
 function this.spend(cost)
     if not this.can_afford(cost) then
         return false
     end
     for name, n in pairs(cost) do
-        n = take(stock, name, n)
-        for _, s in pairs(live_mimics()) do
-            if n == 0 then
-                break
-            end
-            n = take(s, name, n)
-        end
+        take(stock, name, n)
     end
     return true
 end
@@ -165,17 +174,8 @@ end
 
 -- stored items sorted by display name: list of {name, caption, count}
 function this.items()
-    local counts = {}
-    for name, n in pairs(stock) do
-        counts[name] = n
-    end
-    for _, s in pairs(live_mimics()) do
-        for name, n in pairs(s) do
-            counts[name] = (counts[name] or 0) + n
-        end
-    end
     local list = {}
-    for name, n in pairs(counts) do
+    for name, n in pairs(stock) do
         table.insert(list, {name = name, caption = this.caption(name), count = n})
     end
     table.sort(list, function(a, b) return a.caption < b.caption end)

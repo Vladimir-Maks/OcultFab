@@ -132,13 +132,14 @@ local function cell_of(pos)
 end
 
 -- the nearest place to hand the item in: a sitting mimic with free space
--- or the core. Returns the cell to walk to and the mimic uid (nil = core)
+-- or the core (if it isn't full). Returns the cell to walk to and the mimic
+-- uid (nil = core); nil if there is nowhere to put it
 local function drop_off()
     local pos = get_pos()
     local function dist(cell)
         return vec2.distance({pos[1], pos[3]}, {cell[1] + 0.5, cell[3] + 0.5})
     end
-    local best = core_site.access_cell(pos)
+    local best = not economy.is_full() and core_site.access_cell(pos) or nil
     local best_d = best and dist(best)
     local best_uid
     for mimic_uid in pairs(entities.get_all()) do
@@ -217,8 +218,8 @@ local function think()
         deliver()
         return
     end
-    if economy.is_full() then
-        stop_gathering()
+    if not drop_off() then
+        stop_gathering() -- the core and the mimics are full
         return
     end
     local drop = next_drop()
