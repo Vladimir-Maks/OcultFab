@@ -1,7 +1,7 @@
 {
     "model": "custom",
     "model-name": "ocult_tank",
-    "size": [2, 1, 2],
+    "size": [2, 2, 2],
     "hitbox": [0.0, 0.0, 0.0, 2.0, 0.5, 2.0],
     "light-passing": true,
     "sky-light-passing": true,

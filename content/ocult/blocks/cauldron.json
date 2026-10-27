@@ -1,15 +1,14 @@
 {
     "model": "custom",
     "model-name": "ocult_cauldron",
-    "state-based": {
-        "bits": 2,
-        "variants": [
-            {"model": "custom", "model-name": "ocult_cauldron_lava"},
-            {"model": "custom", "model-name": "ocult_cauldron_mana"},
-            {"model": "custom", "model-name": "ocult_cauldron_rubinyte"}
-        ]
-    },
-    "hitbox": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
+    "hitbox": [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.5,
+        1.0
+    ],
     "light-passing": true,
     "sky-light-passing": true,
     "breakable": false

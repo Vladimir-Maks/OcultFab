@@ -4,8 +4,9 @@
 -- into its input. Ready portions go out through the output to the nearest
 -- tank with room for them; the liquid can't go to the core.
 -- One liquid at a time: while something is melting or waiting to be sent,
--- only items of the same kind are accepted. The block variant shows the
--- liquid inside (model per liquid, tools/cauldron_liquids.py).
+-- only items of the same kind are accepted. The liquid inside is an entity
+-- (ocult:cauldron_liquid) tinted with the liquid colour, flickering while
+-- melting; it isn't saved, the cauldron spawns it again when needed.
 local building = require "ocult:rts/building"
 local machines = require "ocult:machines"
 local liquids = require "ocult:liquids"
@@ -18,9 +19,37 @@ local function is_empty(state)
     return state.input == 0 and state.ready == 0 and (state._pending or 0) == 0
 end
 
-local function show_liquid(self, id)
-    local liquid = id and liquids.get(id)
-    block.set_variant(self.x, self.y, self.z, liquid and liquid.index or 0)
+local function is_melting(state)
+    return state.liquid ~= nil and state.input > 0 and state.ready < PORTION
+end
+
+local LIQUID_ENTITY = "ocult:cauldron_liquid"
+
+local function remove_liquid(state)
+    local e = state._liquid_uid and entities.get(state._liquid_uid)
+    if e then
+        e:despawn()
+    end
+    state._liquid_uid = nil
+end
+
+-- keeps the liquid entity in line with the state
+local function show(self, state)
+    if not state.liquid then
+        remove_liquid(state)
+        return
+    end
+    local e = state._liquid_uid and entities.get(state._liquid_uid)
+    if not e then
+        -- the model is made for the block's corner (tools/cauldron.py)
+        e = entities.spawn(LIQUID_ENTITY, {self.x, self.y, self.z}, {
+            ocult__cauldron_liquid = {liquid = state.liquid},
+        })
+        state._liquid_uid = e:get_uid()
+    end
+    local comp = e:get_component(LIQUID_ENTITY)
+    comp.liquid = state.liquid
+    comp.melting = is_melting(state)
 end
 
 local function tank_for(liquid)
@@ -69,15 +98,19 @@ return {
         end
         return text
     end,
-    preview = {model = "ocult_cauldron_lava", center = {0.5, 0.4, 0.5}},
+    preview = {model = "ocult_cauldron", center = {0.5, 0.4, 0.5}},
     commands = {
         {id = "demolish", label = "Разр.", hint = "Разрушить тигель", slot = 12},
     },
     command_demolish = function(self)
+        local state = machines.of(self)
+        if state then
+            remove_liquid(state)
+        end
         building.demolish(self)
     end,
     pipes = true,
-    -- the model's nozzles IN / OUT (turned by tools/cauldron_liquids.py):
+    -- the model's nozzles IN / OUT (turned by tools/cauldron.py):
     -- input on the west, output on the east
     ports = {
         {cell = {0, 0}, side = "west", mode = "out"},
@@ -85,6 +118,7 @@ return {
     },
 
     machine = true,
+    on_remove = remove_liquid,
     new_state = function()
         return {input = 0, ready = 0, progress = 0}
     end,
@@ -106,8 +140,8 @@ return {
         if state.liquid and is_empty(state) then
             state.liquid = nil
             state.progress = 0
-            show_liquid(self, nil)
         end
+        show(self, state)
     end,
 
     -- item receiver (see buildings/pump)
@@ -123,11 +157,8 @@ return {
     end,
     reserve_item = function(self, state, name)
         state._pending = (state._pending or 0) + 1
-        local id = liquids.of_item(name).id
-        if state.liquid ~= id then
-            state.liquid = id
-            show_liquid(self, id)
-        end
+        state.liquid = liquids.of_item(name).id
+        show(self, state)
     end,
     take_item = function(self, state, name)
         state._pending = math.max(0, (state._pending or 0) - 1)

@@ -1,0 +1,12 @@
+@configure fps 24 rotation-order ZYX
+@move bone Top by y curve bezier period 48 {
+    @key frame 0 value 0 lx 0 ly 0 rx 8 ry -0.01042
+    @key frame 24 value -0.0625 lx -8 ly 0 rx 8 ry 0
+    @key frame 48 value 0 lx -8 ly -0.01042 rx 0 ry 0
+}
+@move bone Coil2 by y curve bezier period 48 {
+    @key frame 0 value 0 lx 0 ly 0 rx 8 ry 0.01042
+    @key frame 24 value 0.0625 lx -8 ly -0.01042 rx 7.99667 ry 0
+    @key frame 47.99 value 0.0625 lx -7.99667 ly 0 rx 0.00333 ry -0.02083
+    @key frame 48 value 0 lx -0.00333 ly 0.02083 rx 0 ry 0
+}

@@ -18,6 +18,9 @@
   "entities": [
     "worker",
     "mimic",
-    "pipe_item"
+    "pipe_item",
+    "cauldron_liquid",
+    "tank_liquid",
+    "pump_top"
   ]
 }

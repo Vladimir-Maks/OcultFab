@@ -1,0 +1,24 @@
+{
+    "root": {
+        "nodes": [
+            {
+                "name": "Top",
+                "offset": [
+                    0.0,
+                    1.0,
+                    0.0
+                ],
+                "model": "ocult_pump_Top"
+            },
+            {
+                "name": "Coil2",
+                "offset": [
+                    0.0,
+                    0.5625,
+                    0.0
+                ],
+                "model": "ocult_pump_Coil2"
+            }
+        ]
+    }
+}

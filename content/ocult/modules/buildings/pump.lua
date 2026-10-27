@@ -1,4 +1,4 @@
--- Item pump (block ocult:pump, 1x1, placeholder box model): takes the chosen
+-- Item pump (block ocult:pump, 1x1): takes the chosen
 -- resource out of the storage (its input is piped to the core) and sends it
 -- through its outputs to buildings that take items (cauldrons).
 --
@@ -13,17 +13,20 @@
 --            can take it
 -- An item leaves only if some receiver has reserved room for it; with every
 -- receiver full the pump waits.
+-- The block is the static part of .assets/pump/pipe-pump.bbmodel; the moving
+-- parts are the entity ocult:pump_top (not saved, spawned again by update).
 local building = require "ocult:rts/building"
 local machines = require "ocult:machines"
 local economy = require "ocult:economy"
 local logistics = require "ocult:logistics"
 
+local TOP_ENTITY = "ocult:pump_top"
 local INTERVAL = 0.5 -- seconds between items
 local OUTPUTS = 3    -- ports 2..4 (port 1 is the input)
 
 local this = {
     title = "Помпа предметов",
-    preview = {model = "ocult_pump", center = {0.5, 0.35, 0.5}},
+    preview = {model = "ocult_pump_full", center = {0.5, 0.5, 0.5}},
     commands = {
         {id = "setup", label = "Настр.", hint = "Что и сколько качать", slot = 1},
         {id = "demolish", label = "Разр.", hint = "Разрушить помпу", slot = 12},
@@ -65,7 +68,20 @@ function this.command_setup(self)
     hud.show_overlay("ocult:pump", false)
 end
 
+local function remove_top(state)
+    local e = state._top_uid and entities.get(state._top_uid)
+    if e then
+        e:despawn()
+    end
+    state._top_uid = nil
+end
+this.on_remove = remove_top
+
 function this.command_demolish(self)
+    local state = machines.of(self)
+    if state then
+        remove_top(state)
+    end
     building.demolish(self)
 end
 
@@ -105,6 +121,9 @@ local function pump_through(self, state, k, route_in)
 end
 
 function this.update(self, state, dt)
+    if not (state._top_uid and entities.get(state._top_uid)) then
+        state._top_uid = entities.spawn(TOP_ENTITY, {self.x + 0.5, self.y, self.z + 0.5}):get_uid()
+    end
     state._timer = (state._timer or 0) + dt
     if state._timer < INTERVAL then
         return

@@ -1,0 +1,11 @@
+{
+    "components": [
+        "ocult:cauldron_liquid"
+    ],
+    "hitbox": [0.1, 0.1, 0.1],
+    "body-type": "kinematic",
+    "blocking": false,
+    "selectable": false,
+    "save": false,
+    "skeleton-name": "ocult:cauldron_liquid"
+}

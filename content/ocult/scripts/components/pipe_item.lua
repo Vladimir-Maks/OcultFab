@@ -7,13 +7,15 @@ local tsf = entity.transform
 entity.rigidbody:set_enabled(false) -- no physics, the position is set directly
 
 local SMOOTHING = 20 -- higher = follows the target more tightly
-local DROP_MODEL = "ocult_liquid_drop" -- white cube, tinted with the liquid colour
+
+-- a portion of liquid: a box with the grey liquid texture, tinted
+-- (tools/cauldron.py)
+local DROP_MODEL = "ocult_liquid_drop"
 
 local rig = entity.skeleton
 if ARGS.liquid then
-    local c = liquids.get(ARGS.liquid).color
     rig:set_model(0, DROP_MODEL)
-    rig:set_color({c[1] / 255, c[2] / 255, c[3] / 255})
+    rig:set_color(liquids.color(ARGS.liquid))
 else
     rig:set_model(0, item.model_name(item.index(ARGS.item)))
 end

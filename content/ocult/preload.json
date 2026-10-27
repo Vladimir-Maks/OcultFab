@@ -2,7 +2,8 @@
     "animation": [
         "ocult_mimic_walk",
         "ocult_mimic_sitdown",
-        "ocult_mimic_standup"
+        "ocult_mimic_standup",
+        "ocult_pump_idle"
     ],
     "models": [
         "ocult_liquid_drop"

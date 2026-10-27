@@ -8,6 +8,8 @@
 --   new_state = function() -> table   initial state (plain data: saved as JSON)
 --   update = function(self, state, dt)  optional, called every world tick;
 --                                       self = {x, y, z, id} (the origin)
+--   on_remove = function(state)        optional, the building is gone: clean
+--                                       up (e.g. entities it spawned)
 -- State fields starting with "_" are not saved: counters of what travels in
 -- the pipes, which is lost when the world closes (see ocult:logistics).
 -- States of demolished buildings are dropped by update().
@@ -63,8 +65,14 @@ function this.update(dt)
             local def = machine_def(id)
             if not def or block.is_segment(x, y, z) then
                 states[k] = nil -- demolished
-            elseif def.update then
-                def.update({x = x, y = y, z = z, id = id}, state, dt)
+                if state._def and state._def.on_remove then
+                    state._def.on_remove(state)
+                end
+            else
+                state._def = def -- for on_remove, when the block is gone
+                if def.update then
+                    def.update({x = x, y = y, z = z, id = id}, state, dt)
+                end
             end
         end
     end

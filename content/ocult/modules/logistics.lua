@@ -22,7 +22,7 @@ local this = {}
 local ENTITY = "ocult:pipe_item"
 local SPEED = 3.0     -- blocks per second
 local INTERVAL = 0.25 -- seconds between items of one shipment
-local LIFT = 0.25     -- item height above the floor, in the middle of a pipe
+local LIFT = 0.15     -- centre height above the floor: a 0.2 item fits in a 0.3 pipe
 
 local IMPORT = {mine = {["in"] = true, [building.ANY] = true},
                 storage = {out = true, [building.ANY] = true}}
