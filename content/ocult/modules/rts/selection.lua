@@ -185,7 +185,7 @@ local function object_at(hit)
         return nil
     end
     if hit.entity then
-        return unit.get(hit.entity)
+        return unit.get_own(hit.entity)
     end
     if hit.iendpoint then
         return building.instance(unpack(hit.iendpoint))
@@ -374,7 +374,7 @@ local function on_box_select(a, b)
         keys[obj.key()] = true
     end
     for uid, _ in pairs(entities.get_all()) do
-        local obj = unit.get(uid)
+        local obj = unit.get_own(uid)
         if obj and not keys[uid] then
             local sp = cursor_ray.world_to_screen(cam, obj.get_pos())
             if sp and sp[1] >= x0 and sp[1] <= x1 and sp[2] >= y0 and sp[2] <= y1 then

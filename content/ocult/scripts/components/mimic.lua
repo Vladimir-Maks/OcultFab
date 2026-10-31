@@ -6,6 +6,10 @@
 -- it gets up, walks to the core, unloads (waiting there while the core is
 -- full), walks back to where it sat and sits down again. Every mimic also
 -- raises the core's capacity by economy.MIMIC_BONUS (see ocult:economy).
+-- While sitting it's a kinematic body (others bump into it, it doesn't move)
+-- and its cell holds an invisible block ocult:mimic_seat, tagged so that
+-- units route around it (rts/unit AVOID_TAG); workers hand items in from a
+-- cell next to it.
 --
 -- Animations (animation/ocult_mimic_*.vca, exported by tools/bbmodel2rig.py):
 -- walk while moving (played faster the faster it goes), sitdown (holds the
@@ -14,6 +18,7 @@
 local unit = require "ocult:rts/unit"
 local economy = require "ocult:economy"
 local core_site = require "ocult:rts/core_site"
+local combat = require "ocult:combat"
 
 local ANIM_WALK = "ocult_mimic_walk"
 local ANIM_SIT = "ocult_mimic_sitdown"
@@ -88,6 +93,7 @@ unit.extend(this, {
             .. "сам относит их в ядро; склад ядра больше на %d.\n%s\n\nВнутри: %d/%d",
             economy.MIMIC_CAPACITY, economy.MIMIC_BONUS, state,
             economy.mimic_total(uid), economy.MIMIC_CAPACITY)
+        text = self.health_text() .. "\n" .. text
         for _, entry in ipairs(economy.mimic_items(uid)) do
             text = text .. string.format("\n%s ×%d", entry.caption, entry.count)
         end
@@ -95,6 +101,7 @@ unit.extend(this, {
     end,
     preview = {model = "ocult_mimic_full", center = {0, 0, 0}},
     speed = 2.5,
+    health = combat.stats.units["ocult:mimic"].health,
     commands = function(self)
         if sitting then
             return {
@@ -127,17 +134,49 @@ local function cell_of(pos)
     return {math.floor(pos[1]), math.floor(pos[2]), math.floor(pos[3])}
 end
 
+local SEAT = "ocult:mimic_seat"
+local seat -- {x, y, z} of the placed seat block
+
+local function place_seat(cell)
+    local id = block.get(cell[1], cell[2], cell[3])
+    if id == 0 then
+        block.set(cell[1], cell[2], cell[3], block.index(SEAT), 0)
+        seat = cell
+    elseif id == block.index(SEAT) then
+        seat = cell -- saved with the world
+    end
+end
+
+local function remove_seat()
+    if seat and block.get(seat[1], seat[2], seat[3]) == block.index(SEAT) then
+        block.set(seat[1], seat[2], seat[3], 0, 0)
+    end
+    seat = nil
+end
+
+-- sitting: fixed in the middle of its cell, not pushed, walked around
+local function settle()
+    local cell = cell_of(get_pos())
+    local pos = get_pos()
+    entity.transform:set_pos({cell[1] + 0.5, pos[2], cell[3] + 0.5})
+    entity.rigidbody:set_body_type("kinematic")
+    set_anchored(true)
+    place_seat(cell)
+    return cell
+end
+
 local function sit_down()
     sitting = true
     standing_up = 0
-    home = cell_of(get_pos())
-    set_anchored(true)
+    home = settle()
     play(ANIM_SIT)
 end
 
 local function get_up()
     sitting = false
     standing_up = STAND_TIME
+    remove_seat()
+    entity.rigidbody:set_body_type("dynamic")
     play(ANIM_STAND)
 end
 
@@ -217,7 +256,7 @@ end
 
 if sitting then
     home = home or cell_of(get_pos())
-    set_anchored(true)
+    settle()
     -- loaded sitting: straight to the last frame
     play(ANIM_SIT).__timer = 100
 end
@@ -282,6 +321,7 @@ end
 local base_on_despawn = on_despawn
 function on_despawn()
     economy.unregister_mimic(uid)
+    remove_seat()
     if track then
         track:stop()
     end

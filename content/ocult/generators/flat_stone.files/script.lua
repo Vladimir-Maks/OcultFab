@@ -18,9 +18,9 @@ local shade = block.index(fog_layer.SHADE_BLOCK)
 local VEIN_CELL = 4
 local VEIN_AREA = VEIN_CELL - 1
 local ORES = {
-    {block = block.index("ocult:iron_ore"), chance = 0.12, max = 5},
-    {block = block.index("ocult:mana_ore"), chance = 0.06, max = 3},
-    {block = block.index("ocult:rubinyte_ore"), chance = 0.03, max = 2},
+    {block = block.index("ocult:iron_ore"), chance = 0.16, max = 24},
+    {block = block.index("ocult:mana_ore"), chance = 0.12, max = 16},
+    {block = block.index("ocult:rubinyte_ore"), chance = 0.06, max = 4},
 }
 local STEPS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 

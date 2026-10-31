@@ -4,6 +4,7 @@
 -- It is also the storage pipes import from / export to (ocult:logistics).
 local economy = require "ocult:economy"
 local workers = require "ocult:workers"
+local combat = require "ocult:combat"
 
 -- in front of the south side
 local function exit_pos(self)
@@ -16,7 +17,8 @@ return {
     -- a function: the panel re-reads it every frame
     description = function(self)
         return string.format("Ядро проводящее через себя магию.\nПахнет виноградом...\n\n"
-            .. "Склад: %d/%d, свободно %d",
+            .. "Прочность: %d/%d\nСклад: %d/%d, свободно %d",
+            combat.core_health(), combat.stats.core.health,
             economy.total(), economy.capacity(), economy.free())
     end,
     preview = {model = "ocult_core", center = {1.5, 0.8, 1.5}},

@@ -1,6 +1,8 @@
 <!-- Debug panel, toggled with F6 (scripts/hud.lua), like the engine's F3 -->
-<container pos="10,10" size="280,90" color="#000000A0">
+<container pos="10,10" size="280,160" color="#000000A0">
     <label pos="8,6" size="264,20" color="#e0c8d0FF">Отладка (F6)</label>
     <checkbox pos="8,32" size="264,24" supplier="get_free_build" consumer="set_free_build">Строить без ресурсов</checkbox>
     <checkbox pos="8,60" size="264,24" supplier="get_fog" consumer="set_fog">Туман войны</checkbox>
+    <button pos="8,90" size="264,28" onclick="spawn_enemy()">Призвать тролля</button>
+    <button pos="8,124" size="264,28" onclick="make_night()">Наступить ночи</button>
 </container>

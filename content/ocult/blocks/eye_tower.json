@@ -1,0 +1,8 @@
+{
+    "model": "custom",
+    "model-name": "ocult_eye_tower",
+    "hitbox": [0.0, 0.0, 0.0, 1.0, 0.4, 1.0],
+    "light-passing": true,
+    "sky-light-passing": true,
+    "breakable": false
+}

@@ -52,6 +52,20 @@ function this.of(b)
     return this.get(b.x, b.y, b.z)
 end
 
+-- origins of all machines with a state: list of {x, y, z, id}
+function this.all()
+    local list = {}
+    for k in pairs(states) do
+        local x, y, z = k:match("(-?%d+),(-?%d+),(-?%d+)")
+        x, y, z = tonumber(x), tonumber(y), tonumber(z)
+        local id = block.get(x, y, z)
+        if machine_def(id) then
+            table.insert(list, {x = x, y = y, z = z, id = id})
+        end
+    end
+    return list
+end
+
 function this.forget(x, y, z)
     states[key(x, y, z)] = nil
 end

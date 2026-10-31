@@ -1,6 +1,8 @@
 -- Tank (block ocult:tank, 2x2x2, model by tools/tank.py): stores up to
 -- CAPACITY ml of one liquid at a time. Filled by cauldrons through the pipes;
 -- a portion is sent only once the tank has reserved room for it.
+-- Buildings nearby may draw liquid straight from it (draw_liquid; eye
+-- towers take mana this way).
 -- The liquid cube inside (entity ocult:tank_liquid) keeps its size (stretching
 -- it would squash the texture) and sinks by whole pixels as the tank
 -- empties.
@@ -80,8 +82,8 @@ return {
     end,
     pipes = true,
     ports = {
-        {cell = {0, 0}, side = "west", mode = "in"},
-        {cell = {1, 1}, side = "east", mode = "out"},
+        {cell = {0, 0}, side = "west", mode = "out"},
+        {cell = {1, 1}, side = "east", mode = "in"},
     },
 
     machine = true,
@@ -89,7 +91,20 @@ return {
     new_state = function()
         return {ml = 0}
     end,
-    update = show,
+    update = function(self, state, dt)
+        show(self, state)
+    end,
+
+    -- takes up to `amount` ml of liquid `id` out of the tank; returns how
+    -- much was taken
+    draw_liquid = function(self, state, id, amount)
+        if state.liquid ~= id then
+            return 0
+        end
+        local taken = math.min(amount, state.ml)
+        state.ml = state.ml - taken
+        return taken
+    end,
 
     -- liquid receiver (see buildings/cauldron)
     can_take_liquid = function(self, state, id, amount)

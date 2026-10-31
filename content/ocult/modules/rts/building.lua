@@ -14,6 +14,8 @@
 --           {cell = {0, 0}, side = "west", mode = "in"},
 --       },
 --       command_foo = function(self) ... end, -- self = building handle
+--       range_marker = 8, -- optional: a circle of this radius is drawn
+--                         -- around it while placing it and while selected
 --   }
 
 local object = require "ocult:rts/object"
@@ -30,6 +32,7 @@ building.SIDES = {
     west = {-1, 0},
 }
 building.ANY = "any" -- port mode when the building has no `ports`
+building.RANGE_TEXTURE = "blocks:ocult_pipe_light" -- range_marker circles
 
 local defs = {}
 
@@ -193,8 +196,11 @@ function building.place(block_name, origin)
     local def = building.get_def(id)
     fog.reveal(origin[1] + sx / 2, origin[3] + sz / 2,
         def and def.vision or fog.BUILDING_VISION)
-    -- lazy: ocult:pipes requires this module
+    -- lazy: ocult:pipes / ocult:machines require this module
     require("ocult:pipes").refresh_ring(origin[1], origin[2], origin[3], sx, sz)
+    if def and def.machine then
+        require("ocult:machines").get(origin[1], origin[2], origin[3])
+    end
 end
 
 -- removes the building (handle from building.instance); air in the origin
@@ -290,12 +296,18 @@ function building.instance(x, y, z)
     local self = {x = ox, y = oy, z = oz, id = id}
     local ring
 
+    local range
     object.extend(self, def, function(selected)
         if selected then
             ring = markers.ring(ox, oy - 1, oz, sx, sz, "blocks:green")
+            if def.range_marker then
+                range = markers.circle(ox + sx / 2, oy - 1, oz + sz / 2, def.range_marker,
+                    building.RANGE_TEXTURE)
+            end
         else
             markers.clear(ring)
-            ring = nil
+            markers.clear(range)
+            ring, range = nil, nil
         end
     end)
 

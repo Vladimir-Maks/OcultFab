@@ -1,5 +1,6 @@
 -- Cauldron / crucible (block ocult:cauldron, 1x1): melts items into liquid
--- (ocult:liquids): one item -> PORTION ml, the time depends on the liquid.
+-- (ocult:liquids): one item -> `amount` ml in `time` seconds, both set per
+-- liquid in config/liquids.json.
 -- It doesn't take anything from the storage itself: a pump brings the items
 -- into its input. Ready portions go out through the output to the nearest
 -- tank with room for them; the liquid can't go to the core.
@@ -12,7 +13,6 @@ local machines = require "ocult:machines"
 local liquids = require "ocult:liquids"
 local logistics = require "ocult:logistics"
 
-local PORTION = 250 -- ml per item
 local INPUT_MAX = 2 -- items inside + on the way
 
 local function is_empty(state)
@@ -20,7 +20,7 @@ local function is_empty(state)
 end
 
 local function is_melting(state)
-    return state.liquid ~= nil and state.input > 0 and state.ready < PORTION
+    return state.liquid ~= nil and state.input > 0 and state.ready == 0
 end
 
 local LIQUID_ENTITY = "ocult:cauldron_liquid"
@@ -52,27 +52,28 @@ local function show(self, state)
     comp.melting = is_melting(state)
 end
 
-local function tank_for(liquid)
+local function tank_for(liquid, amount)
     return function(target, def, mode)
         return logistics.TARGET_IN(mode) and def.can_take_liquid ~= nil
-            and def.can_take_liquid(target, machines.of(target), liquid, PORTION)
+            and def.can_take_liquid(target, machines.of(target), liquid, amount)
     end
 end
 
--- sends a ready portion to a tank; false if there is none with room
+-- sends the melted liquid (state.ready ml, one item's worth) to a tank with
+-- room for all of it; false if there is none
 local function send_portion(self, state)
-    local liquid = state.liquid
-    local route, target = logistics.find(self, logistics.PORT_OUT, tank_for(liquid))
+    local liquid, amount = state.liquid, state.ready
+    local route, target = logistics.find(self, logistics.PORT_OUT, tank_for(liquid, amount))
     if not route then
         return false
     end
     local def = building.get_def(target.id)
-    def.reserve_liquid(target, machines.of(target), liquid, PORTION)
-    state.ready = state.ready - PORTION
+    def.reserve_liquid(target, machines.of(target), liquid, amount)
+    state.ready = 0
     logistics.send({liquid = liquid}, route, self.y, function()
         local tank = machines.get(target.x, target.y, target.z)
         if tank then -- not demolished meanwhile
-            def.take_liquid(target, tank, liquid, PORTION)
+            def.take_liquid(target, tank, liquid, amount)
         end
     end)
     return true
@@ -125,16 +126,16 @@ return {
 
     update = function(self, state, dt)
         state._status = nil
-        if state.ready >= PORTION and not send_portion(self, state) then
+        if state.ready > 0 and not send_portion(self, state) then
             state._status = "Нет цистерны со свободным местом"
         end
-        if state.input > 0 and state.ready < PORTION then
+        if state.input > 0 and state.ready == 0 then
             local liquid = liquids.get(state.liquid)
             state.progress = state.progress + dt
             if state.progress >= liquid.time then
                 state.progress = 0
                 state.input = state.input - 1
-                state.ready = state.ready + PORTION
+                state.ready = liquid.amount
             end
         end
         if state.liquid and is_empty(state) then

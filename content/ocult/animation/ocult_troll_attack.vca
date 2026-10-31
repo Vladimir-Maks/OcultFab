@@ -1,0 +1,43 @@
+@configure fps 24 rotation-order ZYX
+@rotate bone larm by x curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry -1.4067
+    @key frame 19.99992 value -4.2201 lx -6.66664 ly 1.4067 rx 2.4 ry 0
+    @key frame 30 value -4.2201 lx -2.4 ly 0 rx 2.4 ry 0
+    @key frame 36 value 0 lx -2.4 ly 0 rx 0 ry 0
+}
+@rotate bone larm by y curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry -0.89467
+    @key frame 19.99992 value -2.684 lx -6.66664 ly 0.89467 rx 2.4 ry 0
+    @key frame 30 value -2.684 lx -2.4 ly 0 rx 2.4 ry 0
+    @key frame 36 value 0 lx -2.4 ly 0 rx 0 ry 0
+}
+@rotate bone larm by z curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry -49.19963
+    @key frame 19.99992 value -147.5989 lx -6.66664 ly 49.19963 rx 2.4 ry 0
+    @key frame 30 value -147.5989 lx -2.4 ly 0 rx 2.4 ry 0
+    @key frame 36 value 0 lx -5.20776 ly 92.0872 rx 0 ry 0
+}
+@rotate bone rarm by x curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry 1.4067
+    @key frame 19.99992 value 4.2201 lx -6.66664 ly -1.4067 rx 2.4 ry 0
+    @key frame 30 value 4.2201 lx -2.4 ly 0 rx 2.4 ry 0
+    @key frame 36 value 0 lx -2.4 ly 0 rx 0 ry 0
+}
+@rotate bone rarm by y curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry -0.89467
+    @key frame 19.99992 value -2.684 lx -6.66664 ly 0.89467 rx 2.4 ry 0
+    @key frame 30 value -2.684 lx -2.4 ly 0 rx 2.4 ry 0
+    @key frame 36 value 0 lx -2.4 ly 0 rx 0 ry 0
+}
+@rotate bone rarm by z curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry -49.19963
+    @key frame 19.99992 value -147.5989 lx -6.66664 ly 49.19963 rx 2.4 ry 0
+    @key frame 30 value -147.5989 lx -2.4 ly 0 rx 2.4 ry 0
+    @key frame 36 value 0 lx -5.20776 ly 92.0872 rx 0 ry 0
+}
+@move bone body by y curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 6.66664 ry 0.01042
+    @key frame 19.99992 value 0.03125 lx -6.66664 ly -0.01042 rx 2.4 ry 0
+    @key frame 30 value 0.03125 lx -1.29696 ly 0.01076 rx 1.29696 ry -0.01076
+    @key frame 36 value 0 lx -6 ly -0.12312 rx 0 ry 0
+}

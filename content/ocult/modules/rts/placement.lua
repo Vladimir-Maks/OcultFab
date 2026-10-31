@@ -75,6 +75,13 @@ local function update_preview(cam)
     local x, z, w, d = building.footprint(active.block_name, origin)
     active.marks = markers.rect(x, origin[2] - 1, z, w, d,
         valid and "blocks:green" or "blocks:red")
+    local def = building.get_def(block.index(active.block_name))
+    if def and def.range_marker then
+        for _, id in ipairs(markers.circle(x + w / 2, origin[2] - 1, z + d / 2,
+                def.range_marker, building.RANGE_TEXTURE)) do
+            table.insert(active.marks, id)
+        end
+    end
     active.origin = origin
     active.valid = valid
 end

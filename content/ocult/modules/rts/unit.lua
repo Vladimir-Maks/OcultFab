@@ -20,14 +20,21 @@
 -- slows down and lets the other pass. Workers carrying an item go first.
 --
 -- Extra def fields:
---   speed - max speed, blocks/s
---   accel - acceleration and braking, blocks/s^2
+--   speed  - max speed, blocks/s
+--   accel  - acceleration and braking, blocks/s^2
+--   health - hit points (saved); at 0 the unit dies (env.on_death(), then
+--            it's removed). Without it the unit can't be damaged
+--   enemy  - true for enemies: not selectable, don't reveal the fog
+--   model_yaw - degrees added to the model's rotation, for models whose
+--            front isn't -Z (90: the model looks along +X)
 
 local object = require "ocult:rts/object"
 local building = require "ocult:rts/building"
 local arena = require "ocult:arena"
 
 local unit = {}
+
+unit.AVOID_TAG = "ocult:avoid"
 
 local ARRIVE_DISTANCE = 0.15
 local WAYPOINT_REACHED = 0.4
@@ -45,6 +52,8 @@ local STUCK_CHECK = 1.0        -- seconds between progress checks
 local STUCK_PROGRESS = 0.25    -- blocks of progress expected per check
 local STUCK_GIVE_UP = 3        -- failed checks in a row before giving up
 local TURN_SMOOTHING = 10 -- higher = faster turning
+local HIT_FLASH = 0.25           -- seconds a damaged unit is tinted
+local HIT_COLOR = {1, 0.25, 0.25}
 local UNSTUCK_RADIUS = 3  -- blocks searched for a free cell when inside a block
 
 -- main component of a unit entity, or nil
@@ -55,6 +64,15 @@ function unit.get(uid)
     end
     local comp = e:get_component(e:def_name())
     if comp and comp.is_rts_object then
+        return comp
+    end
+    return nil
+end
+
+-- main component of one of our units (not an enemy), or nil
+function unit.get_own(uid)
+    local comp = unit.get(uid)
+    if comp and not comp.def.enemy then
         return comp
     end
     return nil
@@ -94,8 +112,13 @@ function unit.extend(env, def)
     pathfinding.set_max_visited(agent, MAX_VISITED)
     -- units can't jump: the raised (unmined) stone is a wall for them
     pathfinding.set_jump_height(agent, 0)
+    -- cells to walk around: blocks tagged "ocult:avoid" (e.g. under a
+    -- sitting mimic, see components/mimic)
+    pathfinding.avoid_tag(agent, unit.AVOID_TAG)
 
-    rig:set_color(def.color or {1, 1, 1})
+    local base_color = def.color or {1, 1, 1}
+    local flash = 0 -- seconds of the hit flash left
+    rig:set_color(base_color)
 
     -- selection doesn't change how a unit looks
     object.extend(env, def, function(selected) end)
@@ -108,6 +131,34 @@ function unit.extend(env, def)
     function env.remove()
         alive = false
         entity:despawn()
+    end
+
+    if def.health then
+        env.max_health = def.health
+        env.health = env.SAVED_DATA.health or def.health
+
+        function env.take_damage(n)
+            if not alive then
+                return
+            end
+            env.health = math.max(0, env.health - n)
+            env.SAVED_DATA.health = env.health
+            flash = HIT_FLASH
+            if env.health == 0 then
+                if env.on_death then
+                    env.on_death()
+                end
+                env.remove()
+            end
+        end
+    end
+
+    -- "Прочность: 7/10" for descriptions, "" without health
+    function env.health_text()
+        if not env.max_health then
+            return ""
+        end
+        return string.format("Прочность: %d/%d", env.health, env.max_health)
     end
 
     local function halt()
@@ -166,6 +217,15 @@ function unit.extend(env, def)
         on_fail = nil
         route = nil
         halt()
+    end
+
+    -- turn the model towards pos (e.g. while attacking on the spot)
+    function env.face(pos)
+        local p = tsf:get_pos()
+        local d = vec2.normalize({pos[1] - p[1], pos[3] - p[3]})
+        if d[1] == d[1] then -- not NaN
+            dir_x, dir_z = d[1], d[2]
+        end
     end
 
     -- current movement direction {x, z}, or nil when standing
@@ -385,7 +445,16 @@ function unit.extend(env, def)
         local target_yaw = math.deg(math.atan2(-dir_x, -dir_z))
         local diff = (target_yaw - yaw + 180) % 360 - 180
         yaw = yaw + diff * (1 - math.exp(-TURN_SMOOTHING * delta))
-        tsf:set_rot(mat4.rotate({0, 1, 0}, yaw))
+        tsf:set_rot(mat4.rotate({0, 1, 0}, yaw + (def.model_yaw or 0)))
+        if flash > 0 then
+            flash = math.max(0, flash - delta)
+            local k = flash / HIT_FLASH
+            rig:set_color({
+                base_color[1] + (HIT_COLOR[1] - base_color[1]) * k,
+                base_color[2] + (HIT_COLOR[2] - base_color[2]) * k,
+                base_color[3] + (HIT_COLOR[3] - base_color[3]) * k,
+            })
+        end
     end
 
     function env.on_despawn()

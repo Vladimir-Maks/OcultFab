@@ -1,0 +1,37 @@
+{
+    "core": {
+        "health": 100
+    },
+    "units": {
+        "ocult:worker": {"health": 10, "damage": 1, "attack_speed": 1.0, "attack_range": 1.5},
+        "ocult:mimic": {"health": 30}
+    },
+    "eye_tower": {
+        "health": 10,
+        "damage": 5,
+        "range": 8,
+        "mana_per_shot": 10,
+        "mana_capacity": 100,
+        "shot_interval": 1.0
+    },
+    "enemies": {
+        "troll": {
+            "entity": "ocult:troll",
+            "health": 20,
+            "speed": 2.0,
+            "attack_range": 1.5,
+            "damage": 2,
+            "attack_speed": 1.0
+        }
+    },
+    "spawn": {
+        "night_start": 0,
+        "night_end": 4,
+        "enemy": "troll",
+        "interval": 20,
+        "group": 1,
+        "max_alive": 10,
+        "distance": 20,
+        "distance_spread": 15
+    }
+}

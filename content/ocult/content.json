@@ -3,6 +3,7 @@
     "altar",
     "pipe",
     "extractor",
+    "eye_tower",
     "tank",
     "pump",
     "cauldron",
@@ -12,7 +13,8 @@
     "iron_ore",
     "stone",
     "fog",
-    "shade"
+    "shade",
+    "mimic_seat"
   ],
   "items": [],
   "entities": [
@@ -21,6 +23,9 @@
     "pipe_item",
     "cauldron_liquid",
     "tank_liquid",
-    "pump_top"
+    "pump_top",
+    "troll",
+    "eye_head",
+    "beam"
   ]
 }

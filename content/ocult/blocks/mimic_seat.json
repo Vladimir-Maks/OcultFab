@@ -1,0 +1,12 @@
+{
+    "model": "none",
+    "caption": "Место мимика",
+    "obstacle": false,
+    "selectable": false,
+    "replaceable": false,
+    "light-passing": true,
+    "sky-light-passing": true,
+    "breakable": false,
+    "hidden": true,
+    "tags": ["ocult:avoid"]
+}

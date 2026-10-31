@@ -5,6 +5,7 @@ local logistics = require "ocult:logistics"
 local fog = require "ocult:fog"
 local machines = require "ocult:machines"
 local debug_flags = require "ocult:debug"
+local combat = require "ocult:combat"
 
 -- once per world: the core in the middle of the arena + the first cultist
 local MARKER = "world:data/ocult/initialized"
@@ -17,6 +18,7 @@ function on_world_open()
     economy.load()
     machines.load()
     debug_flags.load()
+    combat.load()
     pending = not file.exists(MARKER)
 end
 
@@ -24,11 +26,13 @@ function on_world_save()
     economy.save()
     machines.save()
     debug_flags.save()
+    combat.save()
 end
 
 function on_world_tick()
     logistics.update(1 / 20)
     machines.update(1 / 20)
+    combat.update(1 / 20)
     fog.update()
     if not pending then
         return

@@ -31,6 +31,23 @@ function this.ring(x0, y, z0, w, d, texture)
     return ids
 end
 
+-- circle outline of the given radius around (cx, cz): cells whose centre is
+-- about `radius` away. Drawn on the floor (layer y), or on top of the
+-- raised stone where there is some
+function this.circle(cx, y, cz, radius, texture)
+    local ids = {}
+    for x = math.floor(cx - radius - 1), math.floor(cx + radius + 1) do
+        for z = math.floor(cz - radius - 1), math.floor(cz + radius + 1) do
+            local d = math.sqrt((x + 0.5 - cx) ^ 2 + (z + 0.5 - cz) ^ 2)
+            if math.abs(d - radius) < 0.5 then
+                local top = block.is_solid_at(x, y + 1, z) and y + 1 or y
+                table.insert(ids, top_wrap(x, top, z, texture))
+            end
+        end
+    end
+    return ids
+end
+
 function this.clear(ids)
     for _, id in ipairs(ids or {}) do
         gfx.blockwraps.unwrap(id)

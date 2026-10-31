@@ -1,0 +1,11 @@
+{
+    "components": [
+        "ocult:troll"
+    ],
+    "hitbox": [0.9, 0.9, 0.9],
+    "blocking": false,
+    "step-height": 0,
+    "skeleton-name": "ocult:troll",
+    "solid": true,
+    "mass": 40.0
+}

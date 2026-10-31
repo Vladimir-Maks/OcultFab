@@ -5,7 +5,8 @@
 -- Amounts are in millilitres.
 local this = {}
 
--- list of {id, caption, color = {r, g, b} 0..255, source = item name, time}
+-- list of {id, caption, color = {r, g, b} 0..255, cauldron recipe: one
+-- `source` item melts into `amount` ml in `time` seconds}
 this.list = json.parse(file.read("ocult:config/liquids.json"))
 
 local by_id, by_source = {}, {}

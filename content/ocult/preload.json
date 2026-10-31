@@ -3,9 +3,15 @@
         "ocult_mimic_walk",
         "ocult_mimic_sitdown",
         "ocult_mimic_standup",
-        "ocult_pump_idle"
+        "ocult_pump_idle",
+        "ocult_troll_walk",
+        "ocult_troll_attack"
     ],
     "models": [
-        "ocult_liquid_drop"
+        "ocult_liquid_drop",
+        "ocult_cultist_full",
+        "ocult_mimic_full",
+        "ocult_pump_full",
+        "ocult_eye_tower_full"
     ]
 }

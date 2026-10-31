@@ -1,0 +1,9 @@
+<!-- Game over: the core is destroyed (ocult:combat). Opened as a permanent
+     HUD element so Esc can't close it; "ОК" -> start.lua deletes the world
+     and quits -->
+<container size="320,140" color="#140c12F0" z-index="10"
+           position-func="gui.get_viewport()[1] / 2 - 160, gui.get_viewport()[2] / 2 - 70">
+    <label pos="0,30" size="320,30" text-align="center" color="#e0c8d0FF">Игра окончена</label>
+    <label pos="0,60" size="320,20" text-align="center" color="#a08890FF">Ядро разрушено</label>
+    <button pos="110,94" size="100,32" onclick="confirm()">ОК</button>
+</container>

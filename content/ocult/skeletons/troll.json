@@ -1,0 +1,70 @@
+{
+    "root": {
+        "nodes": [
+            {
+                "name": "body",
+                "offset": [
+                    0.0,
+                    -0.125,
+                    0.0
+                ],
+                "nodes": [
+                    {
+                        "name": "torso",
+                        "offset": [
+                            -0.109375,
+                            -0.078125,
+                            0.0
+                        ],
+                        "model": "ocult_troll_torso"
+                    },
+                    {
+                        "name": "head",
+                        "offset": [
+                            0.1875,
+                            0.25,
+                            0.03125
+                        ],
+                        "model": "ocult_troll_head"
+                    },
+                    {
+                        "name": "rarm",
+                        "offset": [
+                            -0.03125,
+                            0.28125,
+                            0.328125
+                        ],
+                        "model": "ocult_troll_rarm"
+                    },
+                    {
+                        "name": "larm",
+                        "offset": [
+                            -0.03125,
+                            0.28125,
+                            -0.328125
+                        ],
+                        "model": "ocult_troll_larm"
+                    }
+                ]
+            },
+            {
+                "name": "lleg",
+                "offset": [
+                    -0.046875,
+                    -0.3125,
+                    -0.09375
+                ],
+                "model": "ocult_troll_lleg"
+            },
+            {
+                "name": "rleg",
+                "offset": [
+                    -0.046875,
+                    -0.3125,
+                    0.09375
+                ],
+                "model": "ocult_troll_rleg"
+            }
+        ]
+    }
+}

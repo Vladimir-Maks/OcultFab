@@ -78,7 +78,7 @@ end
 function this.update()
     for uid, e in pairs(entities.get_all()) do
         local comp = e:get_component(e:def_name())
-        if comp and comp.is_rts_object then
+        if comp and comp.is_rts_object and not comp.def.enemy then
             local pos = e.transform:get_pos()
             local cell = math.floor(pos[1]) .. "," .. math.floor(pos[3])
             if last_cell[uid] ~= cell then

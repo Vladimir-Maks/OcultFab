@@ -2,6 +2,8 @@
 -- core or to the nearest sitting mimic, one item per trip, and builds: "Стройка" opens the build menu
 -- (extractor; altar - the cultist sacrifices itself to become one).
 -- RMB on an item (or right next to it) = gather around it.
+-- RMB on an enemy = attack it until it dies (stats: config/combat.json,
+-- units["ocult:worker"]).
 local unit = require "ocult:rts/unit"
 local building = require "ocult:rts/building"
 local arena = require "ocult:arena"
@@ -10,8 +12,12 @@ local economy = require "ocult:economy"
 local core_site = require "ocult:rts/core_site"
 local fog = require "ocult:fog"
 local debug_flags = require "ocult:debug"
+local combat = require "ocult:combat"
+local command_panel = require "ocult:rts/command_panel"
 
 local GATHER_RADIUS = 15 -- RMB on an item: gather within this many blocks of it
+local STATS = combat.stats.units["ocult:worker"]
+local CHASE_INTERVAL = 0.5 -- seconds between route updates while chasing
 local MIMIC = "ocult:mimic"
 local MIMIC_REACH = 2.5  -- hands an item to a mimic from this close
 
@@ -25,11 +31,16 @@ local EXTRACTOR_COST = {
 -- placeholder prices
 local PUMP_COST = {["ocult:stone.item"] = 10, ["ocult:iron_ore.item"] = 5}
 local CAULDRON_COST = {["ocult:stone.item"] = 20, ["ocult:iron_ore.item"] = 5}
-local TANK_COST = {["ocult:stone.item"] = 15, ["ocult:iron_ore.item"] = 10}
+local TANK_COST = {["ocult:stone.item"] = 15, ["ocult:iron_ore.item"] = 5}
+local EYE_TOWER_COST = {["ocult:stone.item"] = 20, ["ocult:mana_ore.item"] = 2}
 
 unit.extend(this, {
     title = "Прихвостень",
-    description = "Прихвостень для работы.\nНенавидит запах винограда...",
+    description = function(self)
+        return "Прихвостень для работы.\nНенавидит запах винограда...\n\n"
+            .. self.health_text()
+    end,
+    health = combat.stats.units["ocult:worker"].health,
     preview = {model = "ocult_cultist_full", center = {0, 0, 0}},
     commands = {
         {id = "stop", label = "Стоп", hint = "Остановиться", slot = 2},
@@ -53,6 +64,9 @@ unit.extend(this, {
         {id = "tank", label = "Цист.", menu = "build", slot = 5,
          hint = "Построить цистерну для жидкости", place = "ocult:tank",
          cost = TANK_COST, show_ports = true},
+        {id = "eye_tower", label = "Глаз", menu = "build", slot = 6,
+         hint = "Построить глазоцвет: стреляет по врагам, питается маной из цистерны",
+         place = "ocult:eye_tower", cost = EYE_TOWER_COST, show_ports = true},
     },
 })
 
@@ -101,10 +115,51 @@ function on_save()
     SAVED_DATA.carried = carried
 end
 
+local enemy_uid      -- the enemy being attacked
+local chase_timer = 0
+local attack_timer = 0
+
 local function stop_gathering()
     release_claim()
     zone = nil
     busy = false
+    enemy_uid = nil
+end
+
+-- the enemy's entity, or nil if it's dead
+local function enemy_entity()
+    local e = enemy_uid and entities.get(enemy_uid)
+    local comp = e and unit.get(enemy_uid)
+    if comp and comp.def.enemy then
+        return e, comp
+    end
+    enemy_uid = nil
+    return nil
+end
+
+local function fight(dt)
+    local e, comp = enemy_entity()
+    if not e then
+        stop()
+        return
+    end
+    local epos = e.transform:get_pos()
+    local pos = get_pos()
+    attack_timer = math.max(0, attack_timer - dt)
+    if vec2.distance({pos[1], pos[3]}, {epos[1], epos[3]}) <= STATS.attack_range then
+        stop()
+        face(epos)
+        if attack_timer == 0 then
+            attack_timer = 1 / STATS.attack_speed
+            comp.take_damage(STATS.damage)
+        end
+        return
+    end
+    chase_timer = chase_timer - dt
+    if chase_timer <= 0 then
+        chase_timer = CHASE_INTERVAL
+        move_to({math.floor(epos[1]), arena.LEVEL, math.floor(epos[3])})
+    end
 end
 
 local function in_zone(pos)
@@ -131,6 +186,13 @@ local function cell_of(pos)
     return {math.floor(pos[1]), arena.LEVEL, math.floor(pos[3])}
 end
 
+-- the free cell next to a sitting mimic nearest to us (its own cell is
+-- walked around, see components/mimic)
+local function mimic_cell(e)
+    local c = cell_of(e.transform:get_pos())
+    return building.ring_cell(c, 1, 1, get_pos())
+end
+
 -- the nearest place to hand the item in: a sitting mimic with free space
 -- or the core (if it isn't full). Returns the cell to walk to and the mimic
 -- uid (nil = core); nil if there is nowhere to put it
@@ -145,9 +207,9 @@ local function drop_off()
     for mimic_uid in pairs(entities.get_all()) do
         local e = receiving_mimic(mimic_uid)
         if e then
-            local cell = cell_of(e.transform:get_pos())
-            local d = dist(cell)
-            if not best_d or d < best_d then
+            local cell = mimic_cell(e)
+            local d = cell and dist(cell)
+            if d and (not best_d or d < best_d) then
                 best, best_d, best_uid = cell, d, mimic_uid
             end
         end
@@ -163,7 +225,7 @@ local function deliver(to)
     elseif to then
         mimic_uid = to
         local e = receiving_mimic(mimic_uid)
-        cell = e and cell_of(e.transform:get_pos())
+        cell = e and mimic_cell(e)
     else
         cell, mimic_uid = drop_off()
     end
@@ -231,7 +293,9 @@ local function think()
 end
 
 function on_update(tps)
-    if zone and not busy then
+    if enemy_uid then
+        fight(1 / tps)
+    elseif zone and not busy then
         think()
     end
 end
@@ -255,6 +319,12 @@ local base_on_order = on_order
 -- target_block: {x, y, z} of the clicked block, if any
 function on_order(pos, target_uid, target_block)
     stop_gathering()
+    local enemy = target_uid and unit.get(target_uid)
+    if enemy and enemy.def.enemy then
+        enemy_uid = target_uid
+        chase_timer = 0
+        return
+    end
     local drop = target_uid and drops.get(target_uid)
     if drop then
         command_gather(zone_around(entities.get(target_uid).transform:get_pos()))
@@ -286,33 +356,29 @@ function command_gather(new_zone)
     last_zone = new_zone
 end
 
--- walk to the chosen spot, then turn into the building
-local function refund(cost)
-    for id, n in pairs(cost) do
-        economy.add(id, n)
-    end
-end
-
--- pays, walks to `stand`, places the building; refunds if it can't
+-- checks the price, walks to `stand` and pays only there, when the
+-- building is actually placed (the stock may have changed on the way)
 local function build(block_name, origin, cost, stand, sacrifice)
     if debug_flags.free_build then
-        cost = {} -- nothing to pay, nothing to refund
+        cost = {}
     end
-    if not economy.spend(cost) then
+    if not economy.can_afford(cost) then
         return "Не хватает: " .. economy.cost_text(cost)
     end
     stop_gathering()
     move_to(stand, function()
-        if building.can_place(block_name, origin) then
+        if not building.can_place(block_name, origin) then
+            command_panel.notify("Место для стройки занято")
+        elseif not economy.spend(cost) then
+            command_panel.notify("Не хватает: " .. economy.cost_text(cost))
+        else
             building.place(block_name, origin)
             if sacrifice then
                 remove()
             end
-        else
-            refund(cost)
         end
     end, function()
-        refund(cost)
+        command_panel.notify("Не подойти к месту стройки")
     end)
 end
 
@@ -346,6 +412,10 @@ end
 
 function command_tank(origin)
     return build_from_edge("ocult:tank", origin, TANK_COST)
+end
+
+function command_eye_tower(origin)
+    return build_from_edge("ocult:eye_tower", origin, EYE_TOWER_COST)
 end
 
 local base_on_render = on_render
