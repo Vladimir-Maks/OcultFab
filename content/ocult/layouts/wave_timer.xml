@@ -1,7 +1,7 @@
 <!-- Time to the next enemy wave, just above the command panel; the backing
      shows only while a wave is coming tonight (wave_timer.xml.lua) -->
 <container size="240,28" z-index="-2" interactive="false" color="#00000000"
-           position-func="gui.get_viewport()[1] / 2 - 120, gui.get_viewport()[2] - 150 - 32">
+           position-func="gui.get_viewport()[1] / 2 - 120, gui.get_viewport()[2] - 170 - 32">
     <label id="text" size="240,28" text-align="center" valign="center"
            color="#ff8070FF" interactive="false"></label>
 </container>

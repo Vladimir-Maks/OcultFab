@@ -41,5 +41,8 @@
         "units/select_cultist2",
         "units/select_cultist3-secret_superlowchance",
         "units/select_mimic"
+    ],
+    "textures": [
+        "ui-bg"
     ]
 }

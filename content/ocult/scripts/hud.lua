@@ -79,7 +79,10 @@ function on_hud_render()
         center_camera()
     end
     rts_camera.update(time.delta())
-    sounds.update()
+    local changed = sounds.update()
+    if changed then
+        command_panel.notify(changed == "night" and "Наступила ночь" or "Наступил день", true)
+    end
     check_storage()
     local focus = rts_camera.get_focus()
     fog.debug_update(focus[1], focus[3])

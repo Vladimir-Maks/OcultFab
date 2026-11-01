@@ -6,9 +6,16 @@
 --                                    "<folder>/damage_<who>"), random pitch
 --   select(kind)                   - sometimes, when a unit is clicked
 --   update()                       - every frame (scripts/hud.lua): day and
---                                    night jingles and music
+--                                    night jingles and music; returns "day" /
+--                                    "night" on the frame it changes
+--
+-- The engine has no setting for how far a sound carries, and the listener is
+-- the RTS camera high above the map. So world sounds are played on the line
+-- from the camera to their point, at HEARING_SCALE of the distance: same
+-- direction, but they fade as if heard from much closer.
 --   stop_music()                   - when the world closes
 local combat = require "ocult:combat"
+local rts_camera = require "ocult:rts_camera"
 
 local this = {}
 
@@ -21,6 +28,7 @@ local MUSIC = {
 }
 local JINGLE = {day = "other/time_day", night = "other/time_night"}
 local MUSIC_VOLUME = 0.6
+local HEARING_SCALE = 0.35 -- smaller = sounds carry farther
 
 local DAMAGE = {
     troll = "enemies/damage_troll",
@@ -36,6 +44,15 @@ local SELECT = {
 }
 
 function this.play(name, pos, volume, pitch)
+    local cam = rts_camera.get_camera()
+    if cam then
+        local c = cam:get_pos()
+        pos = {
+            c[1] + (pos[1] - c[1]) * HEARING_SCALE,
+            c[2] + (pos[2] - c[2]) * HEARING_SCALE,
+            c[3] + (pos[3] - c[3]) * HEARING_SCALE,
+        }
+    end
     audio.play_sound(name, pos[1], pos[2], pos[3], volume or 1, pitch or 1, "regular")
 end
 
@@ -90,6 +107,7 @@ function this.update()
     music = audio.play_stream_2d(MUSIC[now], MUSIC_VOLUME, 1, "music", true)
     if not first then -- no jingle when the world opens
         audio.play_sound_2d(JINGLE[now], 1, 1, "regular")
+        return now
     end
 end
 
