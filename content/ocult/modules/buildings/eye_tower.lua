@@ -11,6 +11,7 @@ local machines = require "ocult:machines"
 local combat = require "ocult:combat"
 local liquids = require "ocult:liquids"
 local defense = require "ocult:defense"
+local sounds = require "ocult:sounds"
 
 local STATS = combat.stats.eye_tower
 local MANA = "mana"
@@ -58,6 +59,7 @@ function this.update(self, state, dt)
     state._cooldown = STATS.shot_interval
     state.mana = state.mana - STATS.mana_per_shot
     head:get_component(HEAD_ENTITY).shoot()
+    sounds.play("towers/shoot_eyetower", eye)
     entities.spawn(BEAM_ENTITY, eye, {ocult__beam = {
         from = eye, to = aim, color = liquids.color(MANA),
     }})

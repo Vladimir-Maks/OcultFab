@@ -24,6 +24,7 @@ local mining = require "ocult:mining"
 local drops = require "ocult:drops"
 local economy = require "ocult:economy"
 local fog = require "ocult:fog"
+local sounds = require "ocult:sounds"
 local debug_flags = require "ocult:debug"
 
 local this = {}
@@ -202,6 +203,9 @@ local function on_left_click()
             toggle(obj)
         else
             this.set({obj})
+            if obj.def.select_sound then
+                sounds.select(obj.def.select_sound)
+            end
         end
     elseif hit and not hit.entity and hit.iendpoint
             and mining.can_mine(unpack(hit.iendpoint)) then

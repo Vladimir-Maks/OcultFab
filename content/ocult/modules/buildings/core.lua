@@ -24,7 +24,7 @@ return {
     preview = {model = "ocult_core", center = {1.5, 0.8, 1.5}},
     commands = {
         {id = "storage", label = "Склад", hint = "Открыть склад", slot = 1},
-        {id = "market", label = "Рынок", hint = "Рынок (пока не работает)", slot = 2},
+        -- {id = "market", label = "Рынок", hint = "Рынок (пока не работает)", slot = 2},
         {id = "worker", label = "Прихв.", slot = 9, cost = workers.COST,
          hint = "Призвать прихвостня (не больше " .. workers.LIMIT .. ")"},
     },

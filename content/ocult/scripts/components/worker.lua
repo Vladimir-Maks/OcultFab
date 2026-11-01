@@ -14,6 +14,7 @@ local fog = require "ocult:fog"
 local debug_flags = require "ocult:debug"
 local combat = require "ocult:combat"
 local command_panel = require "ocult:rts/command_panel"
+local sounds = require "ocult:sounds"
 
 local GATHER_RADIUS = 15 -- RMB on an item: gather within this many blocks of it
 local STATS = combat.stats.units["ocult:worker"]
@@ -47,6 +48,7 @@ unit.extend(this, {
             .. self.health_text()
     end,
     health = combat.stats.units["ocult:worker"].health,
+    select_sound = "cultist",
     preview = {model = "ocult_cultist_full", center = {0, 0, 0}},
     commands = {
         {id = "stop", label = "Стоп", hint = "Остановиться", slot = 2},
@@ -165,6 +167,7 @@ local function fight(dt)
         if attack_timer == 0 then
             attack_timer = 1 / STATS.attack_speed
             comp.take_damage(STATS.damage)
+            sounds.damage("cultist", pos)
         end
         return
     end

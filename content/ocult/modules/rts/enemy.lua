@@ -16,6 +16,7 @@ local combat = require "ocult:combat"
 local building = require "ocult:rts/building"
 local arena = require "ocult:arena"
 local drops = require "ocult:drops"
+local sounds = require "ocult:sounds"
 
 local enemy = {}
 
@@ -108,6 +109,7 @@ function enemy.extend(env, id, def)
         if hit_target and combat.distance(env.get_pos(), hit_target)
                 <= stats.attack_range + HIT_SLACK then
             combat.damage(hit_target, stats.damage)
+            sounds.damage(id, env.get_pos())
         end
     end
 

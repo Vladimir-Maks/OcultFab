@@ -10,6 +10,7 @@
 -- `menu = "x"` are shown (commands without `menu` live in the root menu).
 -- `cost = {stone = 10}` is shown in the button tooltip.
 local economy = require "ocult:economy"
+local sounds = require "ocult:sounds"
 
 local this = {}
 
@@ -39,7 +40,11 @@ function this.open()
 end
 
 -- short message a bit below the screen centre ("Склад полон"...)
-function this.notify(text)
+-- quiet: no error sound (debug and info messages)
+function this.notify(text, quiet)
+    if not quiet then
+        sounds.ui("error")
+    end
     if notice then
         notice.text.text = text
         notice.root.color = NOTICE_BACKING
@@ -79,7 +84,10 @@ local function add_button(slot, label, hint, color, run)
         "<button pos='%d,%d' size='%d,%d' tooltip='%s'%s onclick='DATA.run()'>%s</button>",
         GAP + col * (BUTTON_W + GAP), GAP + row * (BUTTON_H + GAP),
         BUTTON_W, BUTTON_H, hint, color and (" color='" .. color .. "'") or "", label
-    ), {run = run})
+    ), {run = function()
+        sounds.ui("click")
+        run()
+    end})
 end
 
 -- slot -> command; explicit slots first, the rest fill free cells in order

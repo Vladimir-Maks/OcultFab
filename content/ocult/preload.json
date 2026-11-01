@@ -18,5 +18,28 @@
         "ocult_pump_full",
         "ocult_eye_tower_full",
         "ocult_skull_altar_full"
+    ],
+    "sounds": [
+        "enemies/damage_goblin",
+        "enemies/damage_skeleton",
+        "enemies/damage_troll",
+        "enemies/spawn_skeleton",
+        "other/time_day",
+        "other/time_night",
+        "towers/shoot_badbone1",
+        "towers/shoot_badbone2",
+        "towers/shoot_badbone3",
+        "towers/shoot_badbone4",
+        "towers/shoot_eyetower",
+        "ui/ui_click",
+        "ui/ui_error",
+        "units/damage_cultist",
+        "units/damage_mimic",
+        "units/mimic_close",
+        "units/mimic_open",
+        "units/select_cultist1",
+        "units/select_cultist2",
+        "units/select_cultist3-secret_superlowchance",
+        "units/select_mimic"
     ]
 }

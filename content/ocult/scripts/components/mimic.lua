@@ -19,6 +19,7 @@ local unit = require "ocult:rts/unit"
 local economy = require "ocult:economy"
 local core_site = require "ocult:rts/core_site"
 local combat = require "ocult:combat"
+local sounds = require "ocult:sounds"
 
 local ANIM_WALK = "ocult_mimic_walk"
 local ANIM_SIT = "ocult_mimic_sitdown"
@@ -102,6 +103,7 @@ unit.extend(this, {
     preview = {model = "ocult_mimic_full", center = {0, 0, 0}},
     speed = 2.5,
     health = combat.stats.units["ocult:mimic"].health,
+    select_sound = "mimic",
     commands = function(self)
         if sitting then
             return {
@@ -170,6 +172,7 @@ local function sit_down()
     standing_up = 0
     home = settle()
     play(ANIM_SIT)
+    sounds.play("units/mimic_open", get_pos())
 end
 
 local function get_up()
@@ -178,6 +181,7 @@ local function get_up()
     remove_seat()
     entity.rigidbody:set_body_type("dynamic")
     play(ANIM_STAND)
+    sounds.play("units/mimic_close", get_pos())
 end
 
 function command_sit()
@@ -326,4 +330,11 @@ function on_despawn()
         track:stop()
     end
     base_on_despawn()
+end
+
+-- the mimic never attacks: its "damage" sound plays when it gets hit
+local base_take_damage = take_damage
+function take_damage(n)
+    sounds.damage("mimic", get_pos())
+    base_take_damage(n)
 end

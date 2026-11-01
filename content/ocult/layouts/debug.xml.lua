@@ -25,7 +25,7 @@ function spawn_wave()
     local s = combat.stats.spawn
     combat.clear_queue()
     local n = combat.start_wave(s.wave_interval_min * s.points_per_minute)
-    require("ocult:rts/command_panel").notify("Волна: " .. n .. " врагов")
+    require("ocult:rts/command_panel").notify("Волна: " .. n .. " врагов", true)
 end
 
 -- "До волны: 12 мин", the enemies still queued
@@ -47,5 +47,5 @@ end
 -- removes every enemy and the rest of the current wave
 function kill_enemies()
     local n = combat.kill_all()
-    require("ocult:rts/command_panel").notify("Убито врагов: " .. n)
+    require("ocult:rts/command_panel").notify("Убито врагов: " .. n, true)
 end

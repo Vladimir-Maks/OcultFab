@@ -8,6 +8,7 @@
 local machines = require "ocult:machines"
 local combat = require "ocult:combat"
 local defense = require "ocult:defense"
+local sounds = require "ocult:sounds"
 
 local STATS = combat.stats.skull_altar
 local RUBINYTE = "rubinyte"
@@ -58,6 +59,7 @@ function this.update(self, state, dt)
     state._cooldown = STATS.shot_interval
     state.rubinyte = state.rubinyte - STATS.rubinyte_per_shot
     top:get_component(TOP_ENTITY).shoot()
+    state._riff = sounds.badbone(state._riff, skull)
     entities.spawn(PROJECTILE, skull, {ocult__skull_projectile = {
         from = skull, to = aim, speed = STATS.projectile_speed,
         damage = STATS.damage, splash = STATS.splash,

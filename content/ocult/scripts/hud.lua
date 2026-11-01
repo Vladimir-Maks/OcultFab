@@ -5,9 +5,30 @@ local core_site = require "ocult:rts/core_site"
 local arena = require "ocult:arena"
 local fog = require "ocult:fog"
 local combat = require "ocult:combat"
+local sounds = require "ocult:sounds"
+local economy = require "ocult:economy"
+local command_panel = require "ocult:rts/command_panel"
 
 local DEBUG_LAYOUT = "ocult:debug"
 local debug_open = false
+
+-- "Склад переполнен" when the core storage fills up (once per filling)
+local FULL_CHECK = 0.5 -- seconds between checks
+local full_timer = 0
+local was_full = false
+
+local function check_storage()
+    full_timer = full_timer - time.delta()
+    if full_timer > 0 then
+        return
+    end
+    full_timer = FULL_CHECK
+    local full = economy.is_full()
+    if full and not was_full then
+        command_panel.notify("Склад переполнен")
+    end
+    was_full = full
+end
 
 -- Space: camera to the selection (average point), or to the core when
 -- nothing is selected (the world centre if there is no core). Held down,
@@ -58,9 +79,15 @@ function on_hud_render()
         center_camera()
     end
     rts_camera.update(time.delta())
+    sounds.update()
+    check_storage()
     local focus = rts_camera.get_focus()
     fog.debug_update(focus[1], focus[3])
     if not hud.is_paused() then
         selection.update()
     end
+end
+
+function on_hud_close()
+    sounds.stop_music()
 end
