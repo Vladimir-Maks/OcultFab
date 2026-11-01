@@ -14,7 +14,12 @@
     "stone",
     "fog",
     "shade",
-    "mimic_seat"
+    "mimic_seat",
+    "gold",
+    "fat",
+    "refined_gold",
+    "oil",
+    "skull_altar"
   ],
   "items": [],
   "entities": [
@@ -26,6 +31,10 @@
     "pump_top",
     "troll",
     "eye_head",
-    "beam"
+    "beam",
+    "goblin",
+    "skeleton",
+    "skull_altar_top",
+    "skull_projectile"
   ]
 }

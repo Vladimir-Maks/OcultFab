@@ -38,6 +38,8 @@ function on_hud_open(playerid)
     rts_camera.init(playerid)
     selection.init(rts_camera.get_camera(), playerid)
     combat.check_core() -- the core may have been destroyed before saving
+    hud.open_permanent("ocult:resources")
+    hud.open_permanent("ocult:wave_timer")
     -- F6: debug panel, like the engine's F3
     input.add_callback("key:f6", function()
         debug_open = not debug_open

@@ -1,0 +1,4 @@
+<!-- Top left: stock of the main resources in the core, StarCraft style
+     ("{icon} × {count}"). Filled by resources.xml.lua -->
+<container pos="10,10" size="420,36" z-index="-2" interactive="false"
+           color="#00000000"/>

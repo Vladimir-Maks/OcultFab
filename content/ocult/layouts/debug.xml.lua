@@ -19,15 +19,33 @@ function set_fog(flag)
     fog.set_enabled(flag)
 end
 
--- one enemy of the spawner's kind, placed by the spawner's rules
-function spawn_enemy()
-    if not combat.spawn_enemy(combat.stats.spawn.enemy) then
-        require("ocult:rts/command_panel").notify(
-            "Нет прокопанного места дальше " .. combat.stats.spawn.distance .. " блоков от построек")
+-- a wave right away, worth the shortest wait (spawn.wave_interval_min);
+-- replaces what's left of the queued wave
+function spawn_wave()
+    local s = combat.stats.spawn
+    combat.clear_queue()
+    local n = combat.start_wave(s.wave_interval_min * s.points_per_minute)
+    require("ocult:rts/command_panel").notify("Волна: " .. n .. " врагов")
+end
+
+-- "До волны: 12 мин", the enemies still queued
+function wave_status()
+    local eta = combat.next_wave_eta()
+    local text = "Ночь " .. combat.night() .. ". "
+        .. (eta and string.format("До волны: %d мин", math.ceil(eta)) or "Волн нет")
+    if combat.queued() > 0 then
+        text = text .. ", в очереди " .. combat.queued()
     end
+    return text
 end
 
 -- the start of the night (config/combat.json, spawn.night_start)
 function make_night()
     world.set_day_time(combat.stats.spawn.night_start / 24)
+end
+
+-- removes every enemy and the rest of the current wave
+function kill_enemies()
+    local n = combat.kill_all()
+    require("ocult:rts/command_panel").notify("Убито врагов: " .. n)
 end

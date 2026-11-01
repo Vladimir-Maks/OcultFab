@@ -1,0 +1,67 @@
+@configure fps 24 rotation-order ZYX
+@move bone head by y curve bezier period 24 {
+    @key frame 0 value -0.03125 lx 0 ly 0 rx 2 ry 0.01042
+    @key frame 6 value 0.03125 lx -2 ly 0 rx 2 ry 0
+    @key frame 12 value -0.03125 lx -2 ly 0 rx 2 ry 0
+    @key frame 18 value 0.03125 lx -2 ly 0 rx 2 ry 0
+    @key frame 24 value -0.03125 lx -2 ly 0.01042 rx 0 ry 0
+}
+@rotate bone head by x curve bezier period 24 {
+    @key frame 0 value 0 lx 0 ly 0 rx 2 ry 2.5
+    @key frame 6 value 7.5 lx -2 ly -2.5 rx 2 ry -2.5
+    @key frame 12 value 0 lx -2 ly 2.5 rx 2 ry 2.5
+    @key frame 18 value 7.5 lx -2 ly -2.5 rx 2 ry -2.5
+    @key frame 24 value 0 lx -2 ly 2.5 rx 0 ry 0
+}
+@move bone rleg by z curve bezier period 24 {
+    @key frame 0 value -0.1875 lx 0 ly 0 rx 4 ry 0.0625
+    @key frame 12 value 0 lx -4 ly -0.0625 rx 4 ry -0.0625
+    @key frame 24 value -0.1875 lx -4 ly 0.0625 rx 0 ry 0
+}
+@rotate bone rleg by x curve bezier period 24 {
+    @key frame 0 value -1.8064 lx 0 ly 0 rx 4 ry -6.06453
+    @key frame 12 value -20 lx -4 ly 6.06453 rx 4 ry 6.06453
+    @key frame 24 value -1.8064 lx -4 ly -6.06453 rx 0 ry 0
+}
+@rotate bone rleg by y curve bezier period 24 {
+    @key frame 0 value 5.6842 lx 0 ly 0 rx 4 ry -1.89473
+    @key frame 12 value 0 lx -4 ly 1.89473 rx 4 ry 1.89473
+    @key frame 24 value 5.6842 lx -4 ly -1.89473 rx 0 ry 0
+}
+@rotate bone rleg by z curve bezier period 24 {
+    @key frame 0 value -13.9042 lx 0 ly 0 rx 4 ry 4.63473
+    @key frame 12 value 0 lx -4 ly -4.63473 rx 4 ry -4.63473
+    @key frame 24 value -13.9042 lx -4 ly 4.63473 rx 0 ry 0
+}
+@move bone lleg by z curve bezier period 24 {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry -0.03125
+    @key frame 12 value -0.1875 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value 0 lx -4 ly -0.03125 rx 0 ry 0
+}
+@rotate bone lleg by x curve bezier period 24 {
+    @key frame 0 value -20 lx 0 ly 0 rx 4 ry 3.03227
+    @key frame 12 value -1.8064 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value -20 lx -4 ly 3.03227 rx 0 ry 0
+}
+@rotate bone lleg by y curve bezier period 24 {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry -0.94737
+    @key frame 12 value -5.6842 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value 0 lx -4 ly -0.94737 rx 0 ry 0
+}
+@rotate bone lleg by z curve bezier period 24 {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry 2.31737
+    @key frame 12 value 13.9042 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value 0 lx -4 ly 2.31737 rx 0 ry 0
+}
+@rotate bone coffin by x curve bezier period 24 {
+    @key frame 0 value 5 lx 0 ly 0 rx 2 ry -4.16667
+    @key frame 6 value -7.5 lx -2 ly 4.16667 rx 2 ry 4.16667
+    @key frame 12 value 5 lx -2 ly -4.16667 rx 2 ry -4.16667
+    @key frame 18 value -7.5 lx -2 ly 4.16667 rx 2 ry 4.16667
+    @key frame 24 value 5 lx -2 ly -4.16667 rx 0 ry 0
+}
+@rotate bone upper_body by z curve bezier period 24 {
+    @key frame 0 value 5 lx 0 ly 0 rx 4 ry -1.66667
+    @key frame 12 value -5 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value 5 lx -4 ly -1.66667 rx 0 ry 0
+}

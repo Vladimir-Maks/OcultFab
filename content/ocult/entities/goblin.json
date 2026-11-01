@@ -1,0 +1,11 @@
+{
+    "components": [
+        "ocult:goblin"
+    ],
+    "hitbox": [0.7, 0.8, 0.7],
+    "blocking": false,
+    "step-height": 0,
+    "skeleton-name": "ocult:goblin",
+    "solid": true,
+    "mass": 15.0
+}

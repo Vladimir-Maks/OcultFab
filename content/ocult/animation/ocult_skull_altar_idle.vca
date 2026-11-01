@@ -1,0 +1,10 @@
+@configure fps 24 rotation-order ZYX
+@move bone banner by y curve bezier period 240 {
+    @key frame 0 value 0 lx 0 ly 0 rx 40 ry 0.02083
+    @key frame 120 value 0.125 lx -40 ly 0 rx 40 ry 0
+    @key frame 240 value 0 lx -40 ly 0.02083 rx 0 ry 0
+}
+@rotate bone banner by y curve bezier period 240 {
+    @key frame 0 value 0 lx 0 ly 0 rx 80 ry 120
+    @key frame 240 value 360 lx -80 ly -120 rx 0 ry 0
+}

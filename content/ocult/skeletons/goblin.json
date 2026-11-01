@@ -1,0 +1,86 @@
+{
+    "root": {
+        "nodes": [
+            {
+                "name": "Body",
+                "offset": [
+                    0.0,
+                    0.200187,
+                    0.097281
+                ],
+                "model": "ocult_goblin_Body",
+                "nodes": [
+                    {
+                        "name": "body_top",
+                        "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "model": "ocult_goblin_body_top",
+                        "nodes": [
+                            {
+                                "name": "head",
+                                "offset": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "model": "ocult_goblin_head",
+                                "nodes": [
+                                    {
+                                        "name": "head_base",
+                                        "offset": [
+                                            0.0,
+                                            0.0625,
+                                            -0.125
+                                        ],
+                                        "model": "ocult_goblin_head_base",
+                                        "nodes": [
+                                            {
+                                                "name": "cheecks",
+                                                "offset": [
+                                                    0.070422,
+                                                    -0.075187,
+                                                    -0.163446
+                                                ],
+                                                "model": "ocult_goblin_cheecks"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "hand_r",
+                                "offset": [
+                                    0.256906,
+                                    -0.1156,
+                                    -0.058381
+                                ],
+                                "model": "ocult_goblin_hand_r"
+                            },
+                            {
+                                "name": "hand_l",
+                                "offset": [
+                                    -0.256909,
+                                    -0.115597,
+                                    -0.058382
+                                ],
+                                "model": "ocult_goblin_hand_l"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "body_bot",
+                        "offset": [
+                            -0.078125,
+                            -0.450187,
+                            -0.034781
+                        ],
+                        "model": "ocult_goblin_body_bot"
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "root": {
+        "nodes": [
+            {
+                "name": "banner",
+                "offset": [
+                    0.0,
+                    1.59375,
+                    0.0125
+                ],
+                "model": "ocult_skull_altar_banner",
+                "nodes": [
+                    {
+                        "name": "group",
+                        "offset": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "skull",
+                "offset": [
+                    0.0,
+                    0.8125,
+                    0.0
+                ],
+                "model": "ocult_skull_altar_skull"
+            }
+        ]
+    }
+}

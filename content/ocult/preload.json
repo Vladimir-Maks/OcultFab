@@ -5,13 +5,18 @@
         "ocult_mimic_standup",
         "ocult_pump_idle",
         "ocult_troll_walk",
-        "ocult_troll_attack"
+        "ocult_troll_attack",
+        "ocult_skeleton_walk",
+        "ocult_skeleton_attack",
+        "ocult_skull_altar_idle",
+        "ocult_skull_altar_reload"
     ],
     "models": [
         "ocult_liquid_drop",
         "ocult_cultist_full",
         "ocult_mimic_full",
         "ocult_pump_full",
-        "ocult_eye_tower_full"
+        "ocult_eye_tower_full",
+        "ocult_skull_altar_full"
     ]
 }

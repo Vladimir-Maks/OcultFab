@@ -1,0 +1,46 @@
+@configure fps 24 rotation-order ZYX
+@rotate bone head by y curve bezier {
+    @key frame 24 value 0 lx 0 ly 0 rx 2.33336 ry 0
+    @key frame 31.00008 value 0 lx -2.33336 ly 2.08333 rx 1 ry -2.08333
+    @key frame 34.00008 value -12.5 lx -1 ly 0 rx 2 ry 0
+    @key frame 40.00008 value 0 lx -2 ly -2.08333 rx 0 ry 0
+}
+@rotate bone larm by x curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry 0
+    @key frame 12 value 0 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value 0 lx -4 ly -11.25 rx 2 ry 11.25
+    @key frame 30 value 67.5 lx -2 ly -15.28648 rx 2 ry 15.28648
+    @key frame 36 value 91.7189 lx -2 ly 11.25 rx 4 ry -11.25
+    @key frame 48 value 0 lx -4 ly 15.28648 rx 0 ry 0
+}
+@rotate bone larm by y curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry 0
+    @key frame 12 value 0 lx -4 ly 0 rx 4 ry 0
+    @key frame 24 value 0 lx -4 ly 0 rx 2 ry 0
+    @key frame 30 value 0 lx -2 ly -0.09412 rx 2 ry 0.09412
+    @key frame 36 value 0.5647 lx -2 ly 0 rx 4 ry 0
+    @key frame 48 value 0 lx -4 ly 0.09412 rx 0 ry 0
+}
+@rotate bone larm by z curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry 12.91667
+    @key frame 12 value 77.5 lx -4 ly -12.91667 rx 4 ry 12.91667
+    @key frame 24 value 77.5 lx -4 ly 3.22917 rx 2 ry -3.22917
+    @key frame 30 value 58.125 lx -2 ly 7.49158 rx 2 ry -7.49158
+    @key frame 36 value 32.5505 lx -2 ly 9.6875 rx 4 ry -9.6875
+    @key frame 48 value 0 lx -4 ly 5.42508 rx 0 ry 0
+}
+@rotate bone coffin by x curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 8 ry 0
+    @key frame 24 value 0 lx -8 ly -0.83333 rx 2 ry 0.83333
+    @key frame 30 value 5 lx -2 ly -1.25 rx 2 ry 1.25
+    @key frame 36 value 7.5 lx -2 ly 0.83333 rx 4 ry -0.83333
+    @key frame 48 value 0 lx -4 ly 1.25 rx 0 ry 0
+}
+@rotate bone upper_body by y curve bezier {
+    @key frame 0 value 0 lx 0 ly 0 rx 4 ry 3.75
+    @key frame 12 value 22.5 lx -4 ly -3.75 rx 4 ry 3.75
+    @key frame 24 value 22.5 lx -4 ly 8.75 rx 2 ry -8.75
+    @key frame 30 value -30 lx -2 ly 8.75 rx 2 ry -8.75
+    @key frame 36 value -30 lx -2 ly -5 rx 4 ry 5
+    @key frame 48 value 0 lx -4 ly -5 rx 0 ry 0
+}

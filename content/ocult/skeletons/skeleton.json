@@ -1,0 +1,81 @@
+{
+    "root": {
+        "nodes": [
+            {
+                "name": "head",
+                "offset": [
+                    0.0,
+                    0.171875,
+                    -0.265625
+                ],
+                "model": "ocult_skeleton_head"
+            },
+            {
+                "name": "body",
+                "offset": [
+                    0.0,
+                    0.09375,
+                    0.0
+                ],
+                "nodes": [
+                    {
+                        "name": "upper_body",
+                        "offset": [
+                            0.0,
+                            -0.8125,
+                            0.0
+                        ],
+                        "model": "ocult_skeleton_upper_body",
+                        "nodes": [
+                            {
+                                "name": "coffin",
+                                "offset": [
+                                    0.0,
+                                    1.0,
+                                    0.4375
+                                ],
+                                "model": "ocult_skeleton_coffin"
+                            },
+                            {
+                                "name": "larm",
+                                "offset": [
+                                    -0.375,
+                                    1.0625,
+                                    0.125
+                                ],
+                                "model": "ocult_skeleton_larm"
+                            },
+                            {
+                                "name": "rarm",
+                                "offset": [
+                                    0.375,
+                                    1.0625,
+                                    0.125
+                                ],
+                                "model": "ocult_skeleton_rarm"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "rleg",
+                        "offset": [
+                            0.125,
+                            -0.5,
+                            0.15625
+                        ],
+                        "model": "ocult_skeleton_rleg"
+                    },
+                    {
+                        "name": "lleg",
+                        "offset": [
+                            -0.125,
+                            -0.5,
+                            0.15625
+                        ],
+                        "model": "ocult_skeleton_lleg"
+                    }
+                ]
+            }
+        ]
+    }
+}

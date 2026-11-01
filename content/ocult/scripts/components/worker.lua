@@ -33,6 +33,12 @@ local PUMP_COST = {["ocult:stone.item"] = 10, ["ocult:iron_ore.item"] = 5}
 local CAULDRON_COST = {["ocult:stone.item"] = 20, ["ocult:iron_ore.item"] = 5}
 local TANK_COST = {["ocult:stone.item"] = 15, ["ocult:iron_ore.item"] = 5}
 local EYE_TOWER_COST = {["ocult:stone.item"] = 20, ["ocult:mana_ore.item"] = 2}
+local SKULL_ALTAR_COST = {
+    ["ocult:refined_gold.item"] = 3,
+    ["ocult:oil.item"] = 2,
+    ["ocult:stone.item"] = 20,
+    ["ocult:rubinyte_ore.item"] = 1,
+}
 
 unit.extend(this, {
     title = "Прихвостень",
@@ -48,6 +54,8 @@ unit.extend(this, {
          hint = "Собрать ресурсы: ЛКМ по ресурсу или выделить область"},
         {id = "build", label = "Стройка", hint = "Меню построек", slot = 9,
          submenu = "build"},
+        {id = "defense", label = "Защита", hint = "Защитные сооружения", slot = 10,
+         submenu = "defense"},
         -- build menu
         {id = "extractor", label = "Экстр.", menu = "build", slot = 1,
          hint = "Построить экстрактор", place = "ocult:extractor",
@@ -64,9 +72,14 @@ unit.extend(this, {
         {id = "tank", label = "Цист.", menu = "build", slot = 5,
          hint = "Построить цистерну для жидкости", place = "ocult:tank",
          cost = TANK_COST, show_ports = true},
-        {id = "eye_tower", label = "Глаз", menu = "build", slot = 6,
+        -- defense menu
+        {id = "eye_tower", label = "Глаз", menu = "defense", slot = 1,
          hint = "Построить глазоцвет: стреляет по врагам, питается маной из цистерны",
-         place = "ocult:eye_tower", cost = EYE_TOWER_COST, show_ports = true},
+         place = "ocult:eye_tower", cost = EYE_TOWER_COST},
+        {id = "skull_altar", label = "Кости", menu = "defense", slot = 2,
+         hint = "Принести себя в жертву и стать ПЛОХИМИ КОСТЯМИ: метает череп, "
+             .. "питается расплавленным рубинитом из цистерны",
+         place = "ocult:skull_altar", cost = SKULL_ALTAR_COST},
     },
 })
 
@@ -386,6 +399,12 @@ end
 function command_altar(origin)
     return build("ocult:altar", origin, ALTAR_COST,
         building.center_cell("ocult:altar", origin), true)
+end
+
+-- the cultist becomes the altar, like with ocult:altar
+function command_skull_altar(origin)
+    return build("ocult:skull_altar", origin, SKULL_ALTAR_COST,
+        building.center_cell("ocult:skull_altar", origin), true)
 end
 
 -- builds from the edge of the spot, so it isn't walled in

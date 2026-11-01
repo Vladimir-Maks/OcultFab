@@ -1,0 +1,22 @@
+{
+    "extractor": [
+        {
+            "id": "refined_gold",
+            "label": "Золото",
+            "caption": "Восстановленное золото",
+            "inputs": {"ocult:gold.item": 5, "ocult:rubinyte_ore.item": 1},
+            "output": "ocult:refined_gold.item",
+            "count": 1,
+            "time": 10
+        },
+        {
+            "id": "oil",
+            "label": "Масло",
+            "caption": "Масло",
+            "inputs": {"ocult:fat.item": 5},
+            "output": "ocult:oil.item",
+            "count": 1,
+            "time": 8
+        }
+    ]
+}

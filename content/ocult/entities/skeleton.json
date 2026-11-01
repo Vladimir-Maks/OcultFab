@@ -1,0 +1,11 @@
+{
+    "components": [
+        "ocult:skeleton"
+    ],
+    "hitbox": [0.8, 1.4, 0.8],
+    "blocking": false,
+    "step-height": 0,
+    "skeleton-name": "ocult:skeleton",
+    "solid": true,
+    "mass": 25.0
+}

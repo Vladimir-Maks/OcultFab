@@ -170,12 +170,23 @@ end
 -- around it; otherwise the block hitbox lifts them onto the building, where
 -- they can't find a path anymore
 local EJECT_MARGIN = 0.5 -- about half a unit's width
-local NOT_EJECTED = {["base:player"] = true, ["ocult:pipe_item"] = true}
+
+-- only things that stand on the floor are moved: our units and enemies (an
+-- RTS object as the main component) and items lying around. Decorations of
+-- other buildings (liquid in a tank, pump top...) sit at their building's
+-- edge and must stay put
+local function ejectable(e)
+    if e:def_name() == "base:drop" then
+        return true
+    end
+    local comp = e:get_component(e:def_name())
+    return comp ~= nil and comp.is_rts_object == true
+end
 local function eject_entities(origin, sx, sz)
     local center = {origin[1] + sx / 2, origin[2], origin[3] + sz / 2}
     for _, uid in ipairs(entities.get_all_in_radius(center, math.max(sx, sz) + 1)) do
         local e = entities.get(uid)
-        if e and not NOT_EJECTED[e:def_name()] then
+        if e and ejectable(e) then
             local p = e.transform:get_pos()
             if p[1] > origin[1] - EJECT_MARGIN and p[1] < origin[1] + sx + EJECT_MARGIN
                     and p[3] > origin[3] - EJECT_MARGIN and p[3] < origin[3] + sz + EJECT_MARGIN then

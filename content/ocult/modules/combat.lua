@@ -7,13 +7,25 @@
 --   eye_tower.*                    - see buildings/eye_tower
 --   enemies[<id>]                  - entity, health, speed (blocks/s),
 --                                    attack_range (blocks), damage,
---                                    attack_speed (attacks per second)
---   spawn.night_start / night_end  - in-game hours: enemies appear only
+--                                    attack_speed (attacks per second),
+--                                    cost (spawn points), loot: list of
+--                                    {item, chance 0..1, count} dropped on
+--                                    death (rts/enemy), min_night: waves
+--                                    have it only from this night on
+--                                    (nights are counted from 1, saved)
+--   spawn.night_start / night_end  - in-game hours: waves come only
 --                                    between them (0 = midnight)
---   spawn.enemy                    - which enemy (a key of `enemies`)
---   spawn.interval / group         - every `interval` seconds of the night
---                                    `group` enemies appear (intensity)
---   spawn.max_alive                - no new ones while this many are alive
+--   spawn.wave_interval_min / max  - in-game minutes: when the night starts
+--                                    (and after every wave) the time to the
+--                                    next wave is picked at random in this
+--                                    range
+--   spawn.points_per_minute        - a wave gets this many spawn points per
+--                                    in-game minute waited; they're spent on
+--                                    random enemies (enemies[].cost) until
+--                                    nothing more is affordable
+--   spawn.spawn_interval_ticks     - world ticks between enemies of a wave
+--   spawn.max_alive                - a safety cap: the wave waits while this
+--                                    many enemies are alive
 --   spawn.distance / distance_spread - spawn on dug-out floor at least
 --                                    `distance` blocks from any building,
 --                                    up to distance + distance_spread from
@@ -35,7 +47,6 @@ local SAVE_FILE = "world:data/ocult/combat.json"
 this.GAME_OVER_FILE = "world:data/ocult/game_over" -- start.lua watches it
 
 local core_health = this.stats.core.health
-local spawn_timer = 0
 local game_over = false
 
 -- enemy uid -> true (registered by the enemy components)
@@ -238,56 +249,217 @@ local function spawn_cell()
     return nil
 end
 
-local function spawn_enemy(id)
+local function spawn_at(id, cell)
     local def = this.stats.enemies[id]
-    local cell = spawn_cell()
-    if not def or not cell then
+    if not def then
         return false
     end
-    local e = entities.spawn(def.entity, {cell[1] + 0.5, cell[2] + 1, cell[3] + 0.5})
-    return e ~= nil
+    return entities.spawn(def.entity, {cell[1] + 0.5, cell[2] + 0.5, cell[3] + 0.5}) ~= nil
 end
-this.spawn_enemy = spawn_enemy
+
+-- one enemy anywhere the spawner may put it; false if there's no place
+function this.spawn_enemy(id)
+    local cell = spawn_cell()
+    return cell ~= nil and spawn_at(id, cell)
+end
+
+-- a walkable cell within 3 blocks of the wave's spot (they come as a crowd)
+local function near(base)
+    for _ = 1, 10 do
+        local x = base[1] + math.random(-3, 3)
+        local z = base[3] + math.random(-3, 3)
+        if building.is_walkable(x, base[2], z) then
+            return {x, base[2], z}
+        end
+    end
+    return base
+end
+
+local MINUTES_PER_DAY = 24 * 60
+
+local night_number = 0 -- nights begun since the world was created
+local was_night = false
+local next_wave_in -- in-game minutes from the timer start to the next wave
+local waited = 0   -- in-game minutes since the timer started
+local queue = {}   -- enemy ids of the wave still to spawn
+local wave_spot    -- cell the current wave comes from
+local queue_timer = 0
+local last_day_time
+
+local function roll_wave_time()
+    local s = this.stats.spawn
+    next_wave_in = s.wave_interval_min
+        + math.random() * (s.wave_interval_max - s.wave_interval_min)
+    waited = 0
+end
+
+-- random enemies for `points` spawn points: list of ids
+function this.compose_wave(points)
+    local list = {}
+    while true do
+        local affordable = {}
+        for id, def in pairs(this.stats.enemies) do
+            if def.cost and def.cost > 0 and def.cost <= points
+                    and night_number >= (def.min_night or 1) then
+                table.insert(affordable, id)
+            end
+        end
+        if #affordable == 0 then
+            return list
+        end
+        local id = affordable[math.random(#affordable)]
+        table.insert(list, id)
+        points = points - this.stats.enemies[id].cost
+    end
+end
+
+-- queues a wave worth `points`; returns how many enemies it has
+function this.start_wave(points)
+    local list = this.compose_wave(points)
+    for _, id in ipairs(list) do
+        table.insert(queue, id)
+    end
+    wave_spot = nil
+    return #list
+end
+
+-- debug: drops the enemies of the wave not spawned yet
+function this.clear_queue()
+    queue = {}
+end
+
+-- debug: removes all enemies and the queued rest of the wave; returns how
+-- many were alive
+function this.kill_all()
+    queue = {}
+    local n = 0
+    for _, e in ipairs(this.enemies()) do
+        e.comp.remove()
+        n = n + 1
+    end
+    return n
+end
+
+-- in-game minutes left of the current night (0 by day)
+local function night_left()
+    if not is_night() then
+        return 0
+    end
+    local end_time = this.stats.spawn.night_end / 24
+    return ((end_time - world.get_day_time()) % 1) * MINUTES_PER_DAY
+end
+
+-- number of the current (or last) night, from 1; 0 before the first one
+function this.night()
+    return night_number
+end
+
+-- in-game minutes left to the next wave, or nil: no wave tonight (by day,
+-- or the rolled time falls after dawn, when waves are called off)
+function this.next_wave_eta()
+    if not next_wave_in then
+        return nil
+    end
+    local eta = math.max(0, next_wave_in - waited)
+    if eta > night_left() then
+        return nil
+    end
+    return eta
+end
+
+-- real seconds to the next wave, or nil (see next_wave_eta). The engine
+-- advances the time of day by delta * speed / 1440 (World::updateTimers):
+-- at speed 1 an in-game minute is one real second
+function this.next_wave_seconds()
+    local eta = this.next_wave_eta()
+    local speed = world.get_day_time_speed()
+    if not eta or speed <= 0 then
+        return nil
+    end
+    return eta / speed
+end
+
+function this.queued()
+    return #queue
+end
+
+-- spawns the next enemy of the queue every spawn_interval_ticks
+local function spawn_from_queue()
+    if #queue == 0 then
+        return
+    end
+    queue_timer = queue_timer - 1
+    if queue_timer > 0 or this.enemy_count() >= this.stats.spawn.max_alive then
+        return
+    end
+    queue_timer = this.stats.spawn.spawn_interval_ticks
+    wave_spot = wave_spot or spawn_cell()
+    if not wave_spot then
+        return -- no place yet: try again later
+    end
+    if spawn_at(queue[1], near(wave_spot)) then
+        table.remove(queue, 1)
+    end
+end
 
 function this.update(dt)
     if game_over then
         return
     end
-    local s = this.stats.spawn
-    if not is_night() then
-        spawn_timer = 0
-        return
+    local t = world.get_day_time()
+    -- in-game minutes since the last tick (the time of day wraps at 1)
+    local minutes = last_day_time and ((t - last_day_time) % 1) * MINUTES_PER_DAY or 0
+    last_day_time = t
+    local night = is_night()
+    if night and not was_night then
+        night_number = night_number + 1
     end
-    spawn_timer = spawn_timer - dt
-    if spawn_timer > 0 then
-        return
-    end
-    spawn_timer = s.interval
-    for _ = 1, s.group do
-        if this.enemy_count() >= s.max_alive then
-            break
+    was_night = night
+    if night then
+        if not next_wave_in then
+            roll_wave_time()
+        else
+            waited = waited + minutes
+            if waited >= next_wave_in then
+                this.start_wave(math.floor(waited * this.stats.spawn.points_per_minute))
+                roll_wave_time()
+            end
         end
-        spawn_enemy(s.enemy)
+    else
+        next_wave_in = nil -- a wave not come by dawn is called off
     end
+    spawn_from_queue()
 end
 
 ---------------------------------------------------------------- saving
 
 function this.load()
     core_health = this.stats.core.health
-    spawn_timer = 0
     game_over = false
     enemies = {}
+    next_wave_in, waited, queue, wave_spot, last_day_time = nil, 0, {}, nil, nil
+    night_number, was_night = 0, false
     if file.exists(SAVE_FILE) then
         local data = json.parse(file.read(SAVE_FILE))
         core_health = data.core_health or core_health
-        spawn_timer = data.spawn_timer or 0
+        next_wave_in = data.next_wave_in
+        waited = data.waited or 0
+        queue = data.queue or {}
+        night_number = data.night or 0
+        was_night = data.was_night or false
     end
 end
 
 function this.save()
     file.mkdirs("world:data/ocult")
-    file.write(SAVE_FILE, json.tostring({core_health = core_health, spawn_timer = spawn_timer}))
+    file.write(SAVE_FILE, json.tostring({
+        core_health = core_health,
+        next_wave_in = next_wave_in,
+        waited = waited,
+        queue = queue,
+        night = night_number,
+        was_night = was_night,
+    }))
 end
 
 -- after loading: the core may have been destroyed when the game closed

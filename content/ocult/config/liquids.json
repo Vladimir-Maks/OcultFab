@@ -4,7 +4,7 @@
         "caption": "Лава",
         "color": [255, 120, 20],
         "source": "ocult:stone.item",
-        "amount": 250,
+        "amount": 100,
         "time": 10
     },
     {
@@ -20,7 +20,7 @@
         "caption": "Жидкий рубинит",
         "color": [220, 20, 40],
         "source": "ocult:rubinyte_ore.item",
-        "amount": 250,
+        "amount": 1000,
         "time": 20
     }
 ]

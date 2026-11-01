@@ -1,0 +1,9 @@
+{
+    "model": "custom",
+    "model-name": "ocult_skull_altar",
+    "hitbox": [0.0, 0.0, 0.0, 1.0, 0.5, 1.0],
+    "light-passing": true,
+    "sky-light-passing": true,
+    "breakable": false,
+    "emission": [12, 1, 1]
+}

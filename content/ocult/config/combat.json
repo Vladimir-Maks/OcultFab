@@ -8,29 +8,68 @@
     },
     "eye_tower": {
         "health": 10,
-        "damage": 5,
-        "range": 8,
+        "damage": 8,
+        "range": 10,
         "mana_per_shot": 10,
         "mana_capacity": 100,
         "shot_interval": 1.0
     },
+    "skull_altar": {
+        "health": 15,
+        "damage": 5,
+        "range": 7,
+        "splash": 3,
+        "rubinyte_per_shot": 25,
+        "liquid_capacity": 100,
+        "shot_interval": 3.0,
+        "projectile_speed": 8
+    },
     "enemies": {
         "troll": {
             "entity": "ocult:troll",
-            "health": 20,
-            "speed": 2.0,
+            "health": 30,
+            "speed": 1.5,
             "attack_range": 1.5,
             "damage": 2,
-            "attack_speed": 1.0
+            "attack_speed": 1.0,
+            "loot": [
+                {"item": "ocult:fat.item", "chance": 0.5, "count": 1},
+                {"item": "ocult:gold.item", "chance": 0.8, "count": 1}
+            ],
+            "cost": 50
+        },
+        "goblin": {
+            "entity": "ocult:goblin",
+            "health": 15,
+            "speed": 3.0,
+            "attack_range": 1.0,
+            "damage": 1,
+            "attack_speed": 0.5,
+            "loot": [
+                {"item": "ocult:fat.item", "chance": 0.5, "count": 1},
+                {"item": "ocult:gold.item", "chance": 0.8, "count": 1}
+            ],
+            "cost": 20
+        },
+        "skeleton": {
+            "entity": "ocult:skeleton",
+            "health": 40,
+            "speed": 1.8,
+            "attack_range": 1.5,
+            "damage": 4,
+            "attack_speed": 0.5,
+            "cost": 100,
+            "min_night": 3
         }
     },
     "spawn": {
         "night_start": 0,
         "night_end": 4,
-        "enemy": "troll",
-        "interval": 20,
-        "group": 1,
-        "max_alive": 10,
+        "wave_interval_min": 60,
+        "wave_interval_max": 240,
+        "points_per_minute": 10,
+        "spawn_interval_ticks": 10,
+        "max_alive": 40,
         "distance": 20,
         "distance_spread": 15
     }
