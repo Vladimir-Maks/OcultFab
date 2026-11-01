@@ -83,7 +83,7 @@ return {
     title = "Тигель",
     description = function(self)
         local text = "Плавит ресурсы в жидкость: камень - лава, мана камень - мана, "
-            .. "рубинит - жидкий рубинит. Ресурсы подаёт помпа, жидкость уходит "
+            .. "рубинит - жидкий рубинит. Ресурсы подает помпа, жидкость уходит "
             .. "в цистерну.\n\n"
         local state = machines.of(self)
         if not state or (is_empty(state) and not state.liquid) then

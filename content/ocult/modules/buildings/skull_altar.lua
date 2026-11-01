@@ -33,7 +33,7 @@ function this.description(self)
     local state = machines.of(self)
     local text = string.format("Метает череп во врагов в радиусе %d блоков: %d урона "
         .. "всем в квадрате %dx%d, %d мл расплавленного рубинита за выстрел. "
-        .. "Рубинит берёт сам из ближайшей цистерны в этом радиусе.\n\n",
+        .. "Рубинит берет сам из ближайшей цистерны в этом радиусе.\n\n",
         STATS.range, STATS.damage, STATS.splash, STATS.splash, STATS.rubinyte_per_shot)
     if not state then
         return text

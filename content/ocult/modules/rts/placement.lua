@@ -6,6 +6,7 @@
 local building = require "ocult:rts/building"
 local cursor_ray = require "ocult:cursor_ray"
 local markers = require "ocult:rts/markers"
+local port_overlay = require "ocult:rts/port_overlay"
 
 local this = {}
 
@@ -26,7 +27,9 @@ end
 local function clear_marks()
     if active then
         markers.clear(active.marks)
+        port_overlay.clear_preview(active.ports)
         active.marks = nil
+        active.ports = nil
     end
 end
 
@@ -74,8 +77,12 @@ local function update_preview(cam)
     clear_marks()
     local x, z, w, d = building.footprint(active.block_name, origin)
     active.marks = markers.rect(x, origin[2] - 1, z, w, d,
-        valid and "blocks:green" or "blocks:red")
+        valid and "blocks:ocult_marker_yellow" or "blocks:red")
     local def = building.get_def(block.index(active.block_name))
+    -- where its pipes go: the same letters as while laying pipes
+    if def and def.pipes and not active.on_remove then
+        active.ports = port_overlay.show_preview(cam, active.block_name, origin)
+    end
     if def and def.range_marker then
         for _, id in ipairs(markers.circle(x + w / 2, origin[2] - 1, z + d / 2,
                 def.range_marker, building.RANGE_TEXTURE)) do

@@ -63,7 +63,7 @@ return {
     end,
     preview = {model = "ocult_tank", center = {1, 0.7, 1}},
     commands = {
-        {id = "drain", label = "Слить", hint = "Вылить всё содержимое", slot = 1},
+        {id = "drain", label = "Слить", hint = "Вылить все содержимое", slot = 1},
         {id = "demolish", label = "Разр.", hint = "Разрушить цистерну", slot = 12},
     },
     command_drain = function(self)

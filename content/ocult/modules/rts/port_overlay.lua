@@ -60,6 +60,31 @@ local function show_port(axis_x, axis_y, x, y, z, dx, dz, mode)
     table.insert(texts, id)
 end
 
+-- ports of a building that isn't placed yet (placement preview): the letters
+-- and markers for block `block_name` at `origin`; returns a handle for
+-- clear_preview
+function this.show_preview(cam, block_name, origin)
+    local saved_texts, saved_marks = texts, marks
+    texts, marks = {}, {}
+    local axis_x, axis_y = letter_axes(cam)
+    for _, p in ipairs(building.ports(block.index(block_name), origin[1], origin[2], origin[3])) do
+        show_port(axis_x, axis_y, unpack(p))
+    end
+    local handle = {texts = texts, marks = marks}
+    texts, marks = saved_texts, saved_marks
+    return handle
+end
+
+function this.clear_preview(handle)
+    if not handle then
+        return
+    end
+    for _, id in ipairs(handle.texts) do
+        gfx.text3d.hide(id)
+    end
+    markers.clear(handle.marks)
+end
+
 -- cam: the RTS camera, focus: {x, y, z} it looks at
 function this.show(cam, focus)
     this.hide()

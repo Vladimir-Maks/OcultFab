@@ -33,8 +33,7 @@
             "damage": 2,
             "attack_speed": 1.0,
             "loot": [
-                {"item": "ocult:fat.item", "chance": 0.5, "count": 1},
-                {"item": "ocult:gold.item", "chance": 0.8, "count": 1}
+                {"item": "ocult:fat.item", "chance": 0.1, "count": 1}
             ],
             "cost": 50
         },
@@ -46,8 +45,7 @@
             "damage": 1,
             "attack_speed": 0.5,
             "loot": [
-                {"item": "ocult:fat.item", "chance": 0.5, "count": 1},
-                {"item": "ocult:gold.item", "chance": 0.8, "count": 1}
+                {"item": "ocult:gold.item", "chance": 0.3, "count": 1}
             ],
             "cost": 20
         },
@@ -58,6 +56,9 @@
             "attack_range": 1.5,
             "damage": 4,
             "attack_speed": 0.5,
+            "loot": [
+                {"item": "ocult:coffin.item", "chance": 1.0, "count": 1}
+            ],
             "cost": 100,
             "min_night": 3
         }

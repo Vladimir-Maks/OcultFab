@@ -49,7 +49,7 @@ function this.new_state()
 end
 
 function this.description(self)
-    local text = "Подаёт ресурс со склада в здания по трубам: 1 вход, 3 выхода.\n\n"
+    local text = "Подает ресурс со склада в здания по трубам: 1 вход, 3 выхода.\n\n"
     local state = machines.of(self)
     if not state or not state.item then
         return text .. "Ресурс не выбран"

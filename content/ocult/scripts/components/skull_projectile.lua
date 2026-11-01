@@ -1,10 +1,52 @@
 -- A skull shot by a "ПЛОХИЕ КОСТИ" altar: flies in an arc from ARGS.from to
--- ARGS.to at ARGS.speed blocks/s, spinning; where it lands every enemy in a
--- square of ARGS.splash blocks takes ARGS.damage.
+-- ARGS.to at ARGS.speed blocks/s, spinning and leaving a trail of fire;
+-- where it lands it blows up (fire, smoke, bone shards) and every enemy in
+-- a square of ARGS.splash blocks takes ARGS.damage. Particle textures are
+-- from the base pack.
 local combat = require "ocult:combat"
 
 local ARC = 0.25 -- arc height per block of distance
 local SPIN = 540 -- degrees per second
+local TRAIL = {
+    texture = "particles:fire_0",
+    lighting = false,
+    collision = false,
+    spawn_interval = 0.015,
+    lifetime = 0.35,
+    lifetime_spread = 0.4,
+    velocity = {0, 0.6, 0},
+    acceleration = {0, 1, 0},
+    explosion = {0.4, 0.4, 0.4},
+    size = {0.18, 0.18, 0.18},
+    size_spread = 0.5,
+    max_distance = 64,
+}
+local FIRE = {
+    texture = "particles:fire_0",
+    lighting = false,
+    collision = false,
+    lifetime = 0.5,
+    lifetime_spread = 0.5,
+    acceleration = {0, 2, 0},
+    explosion = {6, 4, 6},
+    size = {0.35, 0.35, 0.35},
+    size_spread = 0.6,
+    spawn_spread = {0.4, 0.2, 0.4},
+    max_distance = 64,
+}
+local SMOKE = {
+    frames = {"particles:smoke_0", "particles:smoke_1"},
+    lighting = true,
+    collision = false,
+    lifetime = 1.2,
+    lifetime_spread = 0.4,
+    acceleration = {0, 1.5, 0},
+    explosion = {2.5, 1.5, 2.5},
+    size = {0.45, 0.45, 0.45},
+    size_spread = 0.5,
+    spawn_spread = {0.5, 0.2, 0.5},
+    max_distance = 64,
+}
 local BURST = {
     texture = "blocks:ocult_skull_altar",
     random_sub_uv = 0.2,
@@ -26,6 +68,7 @@ local from, to = ARGS.from, ARGS.to
 local distance = vec3.distance(from, to)
 local duration = math.max(0.1, distance / ARGS.speed)
 local t = 0
+local trail = gfx.particles.emit(entity:get_uid(), -1, TRAIL)
 
 local function land()
     local half = ARGS.splash / 2
@@ -35,8 +78,15 @@ local function land()
             enemy.comp.take_damage(ARGS.damage)
         end
     end
+    gfx.particles.stop(trail)
+    gfx.particles.emit(to, 40, FIRE)
+    gfx.particles.emit(to, 16, SMOKE)
     gfx.particles.emit(to, 24, BURST)
     entity:despawn()
+end
+
+function on_despawn()
+    gfx.particles.stop(trail)
 end
 
 function on_render(delta)

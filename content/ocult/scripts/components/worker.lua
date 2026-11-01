@@ -64,7 +64,7 @@ unit.extend(this, {
          hint = "Принести себя в жертву и стать алтарем", place = "ocult:altar",
          cost = ALTAR_COST},
         {id = "pump", label = "Помпа", menu = "build", slot = 3,
-         hint = "Построить помпу предметов: подаёт ресурс со склада",
+         hint = "Построить помпу предметов: подает ресурс со склада",
          place = "ocult:pump", cost = PUMP_COST, show_ports = true},
         {id = "cauldron", label = "Тигель", menu = "build", slot = 4,
          hint = "Построить тигель: плавит ресурсы в жидкость",
@@ -214,7 +214,8 @@ local function drop_off()
     local function dist(cell)
         return vec2.distance({pos[1], pos[3]}, {cell[1] + 0.5, cell[3] + 0.5})
     end
-    local best = not economy.is_full() and core_site.access_cell(pos) or nil
+    local fits = carried and economy.fits(carried) or not economy.is_full()
+    local best = fits and core_site.access_cell(pos) or nil
     local best_d = best and dist(best)
     local best_uid
     for mimic_uid in pairs(entities.get_all()) do

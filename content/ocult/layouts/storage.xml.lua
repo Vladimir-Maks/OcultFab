@@ -1,4 +1,5 @@
--- Core storage window: one row per stored item (icon, name, count).
+-- Core storage window: one row per stored item (icon, name, count, "−"
+-- button that throws one away; with Shift - ten).
 -- Icons are the items' inventory icons for now.
 local economy = require "ocult:economy"
 
@@ -40,9 +41,16 @@ local function refresh()
         rows:add(string.format([[
             <container size='%d,%d' color='#22141cFF'>
                 <image src='%s' pos='4,2' size='32,32'/>
-                <label pos='44,9' size='190,18' color='#e0c8d0FF'>%s</label>
-                <label pos='236,9' size='84,18' text-align='right' color='#e0c8d0FF'>%d</label>
-            </container>]], ROW_W, ROW_H, icon_of(entry.name), entry.caption, entry.count))
+                <label pos='44,9' size='176,18' color='#e0c8d0FF'>%s</label>
+                <label pos='222,9' size='64,18' text-align='right' color='#e0c8d0FF'>%d</label>
+                <button pos='294,5' size='26,26' onclick='DATA.remove()'
+                        tooltip='Утилизировать 1 (Shift - 10)'>-</button>
+            </container>]], ROW_W, ROW_H, icon_of(entry.name), entry.caption, entry.count),
+            {remove = function()
+                local n = input.is_pressed("key:left-shift") and 10 or 1
+                economy.discard(entry.name, n)
+                refresh()
+            end})
     end
 end
 

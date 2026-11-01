@@ -8,6 +8,10 @@
 -- and holds up to MIMIC_CAPACITY items, which don't count as stored until
 -- the mimic carries them to the core (unload_mimic). get / spend / items
 -- see only the core.
+--
+-- Items take one unit of space each, except those in SIZES: a negative size
+-- is room they bring instead (a coffin in the core raises the capacity by
+-- 25 and takes no space itself).
 local this = {}
 
 this.CAPACITY = 100        -- the core alone
@@ -15,6 +19,11 @@ this.MIMIC_BONUS = 150     -- every mimic raises the common limit by this
 this.MIMIC_CAPACITY = 100  -- what one mimic can hold
 -- summoned at an altar (placeholder price)
 this.MIMIC_COST = {["ocult:stone.item"] = 30, ["ocult:iron_ore.item"] = 5}
+
+-- space one item takes in the core (default 1)
+this.SIZES = {
+    ["ocult:coffin.item"] = -25,
+}
 
 local SAVE_FILE = "world:data/ocult/storage.json"
 
@@ -51,8 +60,18 @@ local function sum(t)
     return n
 end
 
+local function size_of(name)
+    return this.SIZES[name] or 1
+end
+this.size_of = size_of
+
 function this.capacity()
     local n = this.CAPACITY
+    for name, count in pairs(stock) do
+        if size_of(name) < 0 then
+            n = n - size_of(name) * count
+        end
+    end
     for _ in pairs(live_mimics()) do
         n = n + this.MIMIC_BONUS
     end
@@ -63,8 +82,21 @@ function this.get(name)
     return stock[name] or 0
 end
 
+-- space taken in the core
 function this.total()
-    return sum(stock)
+    local n = 0
+    for name, count in pairs(stock) do
+        if size_of(name) > 0 then
+            n = n + size_of(name) * count
+        end
+    end
+    return n
+end
+
+-- true if one more `name` fits into the core
+function this.fits(name)
+    local size = size_of(name)
+    return size <= 0 or this.free() >= size
 end
 
 function this.free()
@@ -77,7 +109,8 @@ end
 
 -- adds as much as fits into the core; returns how many were taken
 function this.add(name, count)
-    local taken = math.min(count, this.free())
+    local size = size_of(name)
+    local taken = size <= 0 and count or math.min(count, math.floor(this.free() / size))
     if taken > 0 then
         stock[name] = (stock[name] or 0) + taken
     end
@@ -114,7 +147,14 @@ function this.unload_mimic(uid)
     if not s then
         return 0
     end
-    for name, n in pairs(s) do
+    -- items that bring room first: they make room for the rest
+    local names = {}
+    for name in pairs(s) do
+        table.insert(names, name)
+    end
+    table.sort(names, function(a, b) return size_of(a) < size_of(b) end)
+    for _, name in ipairs(names) do
+        local n = s[name]
         local taken = this.add(name, n)
         s[name] = n - taken > 0 and n - taken or nil
     end
@@ -129,6 +169,12 @@ function this.mimic_items(uid)
     end
     table.sort(list, function(a, b) return a.caption < b.caption end)
     return list
+end
+
+-- throws up to n of `name` out of the core (storage window "−")
+function this.discard(name, n)
+    local left = (stock[name] or 0) - n
+    stock[name] = left > 0 and left or nil
 end
 
 -- cost: {["ocult:stone.item"] = 10, ...}

@@ -1,5 +1,5 @@
 -- Mimic: a walking chest, a buffer away from the core.
--- "Приём" makes it sit down: then it can't move or turn, and workers hand
+-- "Прием" makes it sit down: then it can't move or turn, and workers hand
 -- their items to it instead of walking to the core. "Встать" gets it back
 -- on its feet. It holds up to economy.MIMIC_CAPACITY items; they don't count
 -- as stored until it brings them to the core: once full (or on "Отнести")
@@ -81,9 +81,9 @@ unit.extend(this, {
     description = function(self)
         local state
         if trip == "unloading" then
-            state = "Ждёт у ядра: склад полон."
+            state = "Ждет у ядра: склад полон."
         elseif trip then
-            state = "Несёт добычу в ядро."
+            state = "Несет добычу в ядро."
         elseif sitting then
             state = "Принимает предметы, не двигается."
         else
@@ -112,7 +112,7 @@ unit.extend(this, {
             }
         end
         return {
-            {id = "sit", label = "Приём", slot = 1,
+            {id = "sit", label = "Прием", slot = 1,
              hint = "Сесть и принимать предметы от прихвостней"},
             {id = "stop", label = "Стоп", hint = "Остановиться", slot = 2},
         }

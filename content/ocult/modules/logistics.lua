@@ -47,13 +47,36 @@ end
 -- its origin, mode - its port facing the pipe), starting only from b's ports
 -- port_ok(mode, index) accepts (index in the building's port list).
 -- Returns a list of {x, z} cells from the target cell to b's port cell, and
--- the target; or nil
+-- the target; or nil.
+-- A target standing right against one of b's ports (its port facing back)
+-- needs no pipe: the route is just the two cells.
+local function adjacent_target(b, px, pz, cx, cz, dx, dz, target_ok)
+    local id = block.get(cx, b.y, cz)
+    local def = id > 0 and building.get_def(id)
+    if not def then
+        return nil
+    end
+    local ox, oy, oz = block.seek_origin(cx, b.y, cz)
+    local mode = building.port_mode(cx, b.y, cz, -dx, -dz)
+    local target = {x = ox, y = oy, z = oz, id = id}
+    if (ox ~= b.x or oz ~= b.z) and mode and target_ok(target, def, mode) then
+        return {{cx, cz}, {px, pz}}, target
+    end
+    return nil
+end
+
 local function search(b, port_ok, target_ok)
     local y = b.y
     local prev, queue = {}, {}
     for i, p in ipairs(building.ports(b.id, b.x, b.y, b.z)) do
         local px, _, pz, dx, dz, mode = unpack(p)
         local cx, cz = px + dx, pz + dz
+        if port_ok(mode, i) and not pipes.is_pipe(cx, y, cz) then
+            local route, target = adjacent_target(b, px, pz, cx, cz, dx, dz, target_ok)
+            if route then
+                return route, target
+            end
+        end
         if port_ok(mode, i) and pipes.is_pipe(cx, y, cz) and not prev[cell_key(cx, cz)] then
             prev[cell_key(cx, cz)] = {px, pz} -- the pipe leads into our port cell
             table.insert(queue, {cx, cz})
