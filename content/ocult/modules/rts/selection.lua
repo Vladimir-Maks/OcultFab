@@ -394,11 +394,16 @@ function this.init(camera, playerid)
     command_panel.open()
     hud.open_permanent(BOX_LAYOUT)
     box_doc = Document.new(BOX_LAYOUT)
-    -- Esc leaves placement mode instead of opening the pause menu
-    -- (handlers run newest first, true stops the chain)
+    -- Esc leaves placement mode; otherwise it opens the pause menu (the
+    -- engine doesn't do it in this setup). Handlers run newest first, true
+    -- stops the chain
     input.add_callback("key:escape", function()
         if mode_command() then
             cancel_modes()
+            return true
+        end
+        if not hud.is_paused() then
+            hud.pause()
             return true
         end
     end)

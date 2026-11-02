@@ -54,7 +54,16 @@ local function center_camera()
     end
 end
 
+-- the pause menu is our copy of the engine's page, with "Как играть"
+-- (layouts/pages/ocult_pause.xml)
+local function pause_page(name, args)
+    if name == "pause" then
+        return "ocult_pause", args
+    end
+end
+
 function on_hud_open(playerid)
+    gui_util.add_page_dispatcher(pause_page)
     hud_cleanup.init()
     rts_camera.init(playerid)
     selection.init(rts_camera.get_camera(), playerid)

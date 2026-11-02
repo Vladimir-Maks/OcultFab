@@ -69,6 +69,8 @@
         "wave_interval_min": 60,
         "wave_interval_max": 240,
         "points_per_minute": 10,
+        "difficulty_start": 0.5,
+        "difficulty_growth": 2,
         "spawn_interval_ticks": 10,
         "max_alive": 40,
         "distance": 20,

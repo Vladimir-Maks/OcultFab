@@ -1,0 +1,10 @@
+<!-- "Как играть" page of the pause menu (ocult_pause.xml); the text is in
+     ocult_howto.xml.lua. The text scrolls (mouse wheel) inside a panel of
+     limited height, the "Назад" button stays below it -->
+<panel size='620' color='#140c12E0' interval='8' context='menu' padding='12'>
+    <panel size='596' max-length='380' scrollable='true' color='0' interval='0'>
+        <label id='text' size='580,1000' multiline='true' text-wrap='true'
+               color='#e0c8d0FF'></label>
+    </panel>
+    <button onclick='menu:back()'>@Back</button>
+</panel>

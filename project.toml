@@ -1,4 +1,4 @@
 name = "ocult-fab"
 title = "Ocult Fab"
 base_packs = ["base", "ocult"]
-permissions = []
+permissions = ["write-to-user"]

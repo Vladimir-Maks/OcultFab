@@ -10,6 +10,7 @@ this.commands = {
     {id = "pipe", label = "Труба", slot = 9,
      hint = "Трубы: ЛКМ - установить, ПКМ - демонтировть, Esc - отменить",
      place = pipes.BLOCK, continuous = true, show_ports = true},
+    {id = "menu", label = "Меню", slot = 12, hint = "Меню игры (Esc)"},
 }
 
 function this.find_command(id)
@@ -26,6 +27,10 @@ function this.run_command(id, ...)
 end
 
 function this.is_alive() return true end
+
+function this.command_menu()
+    hud.pause()
+end
 
 function this.command_pipe(origin)
     pipes.place(origin[1], origin[2], origin[3])

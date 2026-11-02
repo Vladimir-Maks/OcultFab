@@ -23,6 +23,9 @@
 --                                    in-game minute waited; they're spent on
 --                                    random enemies (enemies[].cost) until
 --                                    nothing more is affordable
+--   spawn.difficulty_start / growth - the points are multiplied by
+--                                    start * growth ^ (night - 1): night 1
+--                                    x0.5, night 2 x1, night 3 x2...
 --   spawn.spawn_interval_ticks     - world ticks between enemies of a wave
 --   spawn.max_alive                - a safety cap: the wave waits while this
 --                                    many enemies are alive
@@ -354,6 +357,12 @@ function this.night()
     return night_number
 end
 
+-- wave size multiplier for the current night
+function this.difficulty()
+    local s = this.stats.spawn
+    return (s.difficulty_start or 1) * (s.difficulty_growth or 1) ^ math.max(0, night_number - 1)
+end
+
 -- in-game minutes left to the next wave, or nil: no wave tonight (by day,
 -- or the rolled time falls after dawn, when waves are called off)
 function this.next_wave_eta()
@@ -421,7 +430,8 @@ function this.update(dt)
         else
             waited = waited + minutes
             if waited >= next_wave_in then
-                this.start_wave(math.floor(waited * this.stats.spawn.points_per_minute))
+                this.start_wave(math.floor(waited * this.stats.spawn.points_per_minute
+                    * this.difficulty()))
                 roll_wave_time()
             end
         end

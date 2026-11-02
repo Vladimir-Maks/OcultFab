@@ -1,0 +1,10 @@
+<!-- The engine's pause menu (res/layouts/pages/pause.xml) with "Как играть"
+     instead of "Контент"; swapped in by a page dispatcher in scripts/hud.lua -->
+<panel size='400' color='0' interval='1' context='menu'>
+    <button onclick='gui.close_menu()'>@Continue</button>
+    <button onclick='menu.page="ocult_howto"'>Как играть</button>
+    <button onclick='menu.page="settings"'>@Settings</button>
+    <button onclick='app.close_world(true)'>
+        @Save and Quit to Menu
+    </button>
+</panel>

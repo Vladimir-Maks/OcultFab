@@ -24,14 +24,15 @@ end
 function spawn_wave()
     local s = combat.stats.spawn
     combat.clear_queue()
-    local n = combat.start_wave(s.wave_interval_min * s.points_per_minute)
+    local n = combat.start_wave(math.floor(s.wave_interval_min * s.points_per_minute
+        * combat.difficulty()))
     require("ocult:rts/command_panel").notify("Волна: " .. n .. " врагов", true)
 end
 
 -- "До волны: 12 мин", the enemies still queued
 function wave_status()
     local eta = combat.next_wave_eta()
-    local text = "Ночь " .. combat.night() .. ". "
+    local text = string.format("Ночь %d (x%g). ", combat.night(), combat.difficulty())
         .. (eta and string.format("До волны: %d мин", math.ceil(eta)) or "Волн нет")
     if combat.queued() > 0 then
         text = text .. ", в очереди " .. combat.queued()
